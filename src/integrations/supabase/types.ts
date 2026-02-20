@@ -14,16 +14,239 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      invitations: {
+        Row: {
+          created_at: string
+          id: string
+          receiver_id: string
+          scheduled_at: string | null
+          sender_id: string
+          session_type: Database["public"]["Enums"]["session_type"]
+          status: Database["public"]["Enums"]["invitation_status"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          receiver_id: string
+          scheduled_at?: string | null
+          sender_id: string
+          session_type: Database["public"]["Enums"]["session_type"]
+          status?: Database["public"]["Enums"]["invitation_status"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          receiver_id?: string
+          scheduled_at?: string | null
+          sender_id?: string
+          session_type?: Database["public"]["Enums"]["session_type"]
+          status?: Database["public"]["Enums"]["invitation_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_receiver_id_fkey"
+            columns: ["receiver_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invitations_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matchmaking_queue: {
+        Row: {
+          id: string
+          joined_at: string
+          session_type: Database["public"]["Enums"]["session_type"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          session_type: Database["public"]["Enums"]["session_type"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          session_type?: Database["public"]["Enums"]["session_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matchmaking_queue_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          average_rating: number | null
+          created_at: string
+          display_name: string
+          gender: Database["public"]["Enums"]["gender_type"]
+          id: string
+          is_available: boolean
+          level: Database["public"]["Enums"]["level_type"]
+          total_sessions: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          average_rating?: number | null
+          created_at?: string
+          display_name: string
+          gender: Database["public"]["Enums"]["gender_type"]
+          id?: string
+          is_available?: boolean
+          level?: Database["public"]["Enums"]["level_type"]
+          total_sessions?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          average_rating?: number | null
+          created_at?: string
+          display_name?: string
+          gender?: Database["public"]["Enums"]["gender_type"]
+          id?: string
+          is_available?: boolean
+          level?: Database["public"]["Enums"]["level_type"]
+          total_sessions?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          rated_id: string
+          rater_id: string
+          session_id: string
+          stars: number
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rated_id: string
+          rater_id: string
+          session_id: string
+          stars: number
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          rated_id?: string
+          rater_id?: string
+          session_id?: string
+          stars?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_rated_id_fkey"
+            columns: ["rated_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ratings_rater_id_fkey"
+            columns: ["rater_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ratings_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          created_at: string
+          ended_at: string | null
+          id: string
+          session_type: Database["public"]["Enums"]["session_type"]
+          started_at: string | null
+          status: Database["public"]["Enums"]["session_status"]
+          user1_id: string
+          user2_id: string
+        }
+        Insert: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          session_type: Database["public"]["Enums"]["session_type"]
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["session_status"]
+          user1_id: string
+          user2_id: string
+        }
+        Update: {
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          session_type?: Database["public"]["Enums"]["session_type"]
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["session_status"]
+          user1_id?: string
+          user2_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_user1_id_fkey"
+            columns: ["user1_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_user2_id_fkey"
+            columns: ["user2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_my_profile_id: { Args: never; Returns: string }
+      is_session_participant: {
+        Args: { _session_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      gender_type: "male" | "female"
+      invitation_status: "pending" | "accepted" | "rejected"
+      level_type: "beginner" | "intermediate" | "advanced"
+      session_status: "pending" | "active" | "completed" | "cancelled"
+      session_type: "recitation" | "memorization" | "test"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +373,12 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      gender_type: ["male", "female"],
+      invitation_status: ["pending", "accepted", "rejected"],
+      level_type: ["beginner", "intermediate", "advanced"],
+      session_status: ["pending", "active", "completed", "cancelled"],
+      session_type: ["recitation", "memorization", "test"],
+    },
   },
 } as const
