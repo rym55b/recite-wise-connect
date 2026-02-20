@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { BookOpen, Repeat, ClipboardCheck, Star, Users, Mic } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
+import { useAuth } from '@/hooks/useAuth';
 import { Navbar } from '@/components/Navbar';
 import { IslamicPattern } from '@/components/IslamicPattern';
 import { Button } from '@/components/ui/button';
@@ -16,6 +18,8 @@ const fadeUp = {
 
 export default function Index() {
   const { t, dir } = useI18n();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const features = [
     { icon: Mic, title: t('feature1Title'), desc: t('feature1Desc'), color: 'from-emerald-600 to-emerald-800' },
@@ -71,7 +75,11 @@ export default function Index() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.5 }}
           >
-            <Button size="lg" className="gradient-emerald border-0 px-8 text-lg text-primary-foreground shadow-lg hover:opacity-90">
+            <Button
+              size="lg"
+              className="gradient-emerald border-0 px-8 text-lg text-primary-foreground shadow-lg hover:opacity-90"
+              onClick={() => navigate(user ? '/dashboard' : '/auth')}
+            >
               {t('getStarted')}
             </Button>
           </motion.div>
