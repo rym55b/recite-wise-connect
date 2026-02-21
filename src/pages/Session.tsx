@@ -5,6 +5,7 @@ import { Mic, MicOff, PhoneOff, Star, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/lib/i18n';
+import { useWebRTC } from '@/hooks/useWebRTC';
 import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,12 +21,18 @@ export default function Session() {
 
   const [session, setSession] = useState<any>(null);
   const [partner, setPartner] = useState<any>(null);
-  const [muted, setMuted] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [showRating, setShowRating] = useState(false);
   const [stars, setStars] = useState(5);
   const [comment, setComment] = useState('');
 
+  // WebRTC voice connection
+  const { connected, remoteIsSpeaking, muted, toggleMute, cleanup: cleanupWebRTC } = useWebRTC({
+    sessionId: id || '',
+    localUserId: profile?.id || '',
+    remoteUserId: partner?.id || '',
+    enabled: !!session && !!partner && !showRating,
+  });
   // Timer
   useEffect(() => {
     const iv = setInterval(() => setElapsed(e => e + 1), 1000);
@@ -60,6 +67,7 @@ export default function Session() {
       .from('sessions')
       .update({ status: 'completed', ended_at: new Date().toISOString() })
       .eq('id', id);
+    cleanupWebRTC();
     setShowRating(true);
   };
 
@@ -140,12 +148,15 @@ export default function Session() {
           className="flex flex-col items-center gap-4"
         >
           <div className="relative">
-            <div className={`flex h-24 w-24 items-center justify-center rounded-full ${!muted ? 'ring-4 ring-primary/50 animate-pulse' : ''} bg-primary/10`}>
+            <div className={`flex h-24 w-24 items-center justify-center rounded-full ${remoteIsSpeaking ? 'ring-4 ring-primary/50 animate-pulse' : ''} bg-primary/10`}>
               <span className="text-3xl font-bold text-primary">{partner.display_name[0]}</span>
             </div>
           </div>
           <div className="text-center">
             <h3 className="text-xl font-bold text-foreground">{partner.display_name}</h3>
+            <p className="text-xs text-muted-foreground">
+              {connected ? '🟢 متصل' : '🔴 جارٍ الاتصال...'}
+            </p>
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Star className="h-4 w-4 text-gold fill-current" />
               {Number(partner.average_rating).toFixed(1)}
@@ -164,7 +175,7 @@ export default function Session() {
             size="lg"
             variant={muted ? 'destructive' : 'outline'}
             className="h-16 w-16 rounded-full"
-            onClick={() => setMuted(!muted)}
+            onClick={toggleMute}
           >
             {muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
           </Button>
@@ -181,6 +192,7 @@ export default function Session() {
         <p className="text-xs text-muted-foreground">
           {muted ? t('mute') : t('unmute')}
         </p>
+        <audio id="remote-audio" autoPlay playsInline />
       </main>
     </div>
   );
