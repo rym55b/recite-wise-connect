@@ -28,7 +28,10 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
   const analyserRef = useRef<AnalyserNode | null>(null);
   const remoteAnalyserRef = useRef<AnalyserNode | null>(null);
   const animFrameRef = useRef<number>(0);
-  const isInitiator = localUserId < remoteUserId;
+  const makingOfferRef = useRef(false);
+  const isSettingRemoteRef = useRef(false);
+
+  const isPolite = localUserId > remoteUserId; // polite peer yields on collision
 
   const cleanup = useCallback(() => {
     cancelAnimationFrame(animFrameRef.current);
@@ -82,13 +85,16 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
         const remoteAudio = document.getElementById('remote-audio') as HTMLAudioElement;
         if (remoteAudio && e.streams[0]) {
           remoteAudio.srcObject = e.streams[0];
-          // Remote speaking analysis
-          const remoteCtx = new AudioContext();
-          const remoteSrc = remoteCtx.createMediaStreamSource(e.streams[0]);
-          const remoteAn = remoteCtx.createAnalyser();
-          remoteAn.fftSize = 256;
-          remoteSrc.connect(remoteAn);
-          remoteAnalyserRef.current = remoteAn;
+          try {
+            const remoteCtx = new AudioContext();
+            const remoteSrc = remoteCtx.createMediaStreamSource(e.streams[0]);
+            const remoteAn = remoteCtx.createAnalyser();
+            remoteAn.fftSize = 256;
+            remoteSrc.connect(remoteAn);
+            remoteAnalyserRef.current = remoteAn;
+          } catch (err) {
+            console.warn('Remote analyser error:', err);
+          }
         }
         setConnected(true);
       };
@@ -99,27 +105,47 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
       });
       channelRef.current = channel;
 
-      // Listen for signaling messages
+      // "Perfect negotiation" pattern - handle signals
       channel.on('broadcast', { event: 'signal' }, async ({ payload }) => {
         if (!pcRef.current || payload.from === localUserId) return;
+        const pc = pcRef.current;
 
-        if (payload.type === 'offer') {
-          await pcRef.current.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-          const answer = await pcRef.current.createAnswer();
-          await pcRef.current.setLocalDescription(answer);
-          channel.send({
-            type: 'broadcast',
-            event: 'signal',
-            payload: { from: localUserId, type: 'answer', sdp: answer },
-          });
-        } else if (payload.type === 'answer') {
-          await pcRef.current.setRemoteDescription(new RTCSessionDescription(payload.sdp));
-        } else if (payload.type === 'ice-candidate') {
-          try {
-            await pcRef.current.addIceCandidate(new RTCIceCandidate(payload.candidate));
-          } catch (e) {
-            console.warn('ICE candidate error:', e);
+        try {
+          if (payload.type === 'offer' || payload.type === 'answer') {
+            const description = new RTCSessionDescription(payload.sdp);
+            const offerCollision = payload.type === 'offer' &&
+              (makingOfferRef.current || pc.signalingState !== 'stable');
+
+            if (offerCollision && !isPolite) {
+              // Impolite peer ignores the offer collision
+              console.log('Ignoring colliding offer (impolite)');
+              return;
+            }
+
+            isSettingRemoteRef.current = true;
+            await pc.setRemoteDescription(description);
+            isSettingRemoteRef.current = false;
+
+            if (payload.type === 'offer') {
+              const answer = await pc.createAnswer();
+              await pc.setLocalDescription(answer);
+              channel.send({
+                type: 'broadcast',
+                event: 'signal',
+                payload: { from: localUserId, type: 'answer', sdp: pc.localDescription },
+              });
+            }
+          } else if (payload.type === 'ice-candidate' && payload.candidate) {
+            try {
+              await pc.addIceCandidate(new RTCIceCandidate(payload.candidate));
+            } catch (e) {
+              if (!isSettingRemoteRef.current) {
+                console.warn('ICE candidate error:', e);
+              }
+            }
           }
+        } catch (err) {
+          console.error('Signal handling error:', err);
         }
       });
 
@@ -134,25 +160,78 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
         }
       };
 
-      pc.onconnectionstatechange = () => {
-        setConnected(pc.connectionState === 'connected');
+      // Use negotiationneeded for perfect negotiation
+      pc.onnegotiationneeded = async () => {
+        try {
+          makingOfferRef.current = true;
+          await pc.setLocalDescription();
+          channelRef.current?.send({
+            type: 'broadcast',
+            event: 'signal',
+            payload: { from: localUserId, type: 'offer', sdp: pc.localDescription },
+          });
+        } catch (err) {
+          console.error('Negotiation error:', err);
+        } finally {
+          makingOfferRef.current = false;
+        }
       };
 
-      // Subscribe and then initiate if we're the initiator
+      pc.onconnectionstatechange = () => {
+        const state = pc.connectionState;
+        console.log('WebRTC connection state:', state);
+        setConnected(state === 'connected');
+        // Retry if failed
+        if (state === 'failed') {
+          pc.restartIce();
+        }
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        console.log('ICE connection state:', pc.iceConnectionState);
+        if (pc.iceConnectionState === 'failed') {
+          pc.restartIce();
+        }
+      };
+
+      // Subscribe to channel
       await channel.subscribe();
+      console.log('Subscribed to signaling channel:', `webrtc-${sessionId}`);
 
-      // Small delay to ensure both sides are subscribed
-      await new Promise(r => setTimeout(r, 1000));
+      // Announce presence so the other peer knows we're ready
+      // Both peers send a "ready" message; when one receives it, it triggers renegotiation
+      channel.on('broadcast', { event: 'ready' }, async ({ payload }) => {
+        if (payload.from === localUserId) return;
+        console.log('Remote peer is ready, triggering negotiation');
+        // The onnegotiationneeded should already fire from addTrack,
+        // but if it didn't (race), we can trigger manually for the initiator
+        if (localUserId < remoteUserId && pc.signalingState === 'stable' && !makingOfferRef.current) {
+          try {
+            makingOfferRef.current = true;
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            channel.send({
+              type: 'broadcast',
+              event: 'signal',
+              payload: { from: localUserId, type: 'offer', sdp: pc.localDescription },
+            });
+          } catch (err) {
+            console.error('Manual offer error:', err);
+          } finally {
+            makingOfferRef.current = false;
+          }
+        }
+      });
 
-      if (isInitiator) {
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        channel.send({
-          type: 'broadcast',
-          event: 'signal',
-          payload: { from: localUserId, type: 'offer', sdp: offer },
-        });
-      }
+      // Send ready signal with retries to ensure the other peer sees it
+      const sendReady = () => {
+        channel.send({ type: 'broadcast', event: 'ready', payload: { from: localUserId } });
+      };
+      // Send multiple times with delay to handle race conditions
+      sendReady();
+      setTimeout(sendReady, 1000);
+      setTimeout(sendReady, 3000);
+      setTimeout(sendReady, 6000);
 
       // Speaking detection loop
       const detectSpeaking = () => {
@@ -179,7 +258,7 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
       cancelled = true;
       cleanup();
     };
-  }, [enabled, sessionId, localUserId, remoteUserId, isInitiator, cleanup]);
+  }, [enabled, sessionId, localUserId, remoteUserId, isPolite, cleanup]);
 
   return { connected, isSpeaking, remoteIsSpeaking, muted, toggleMute, cleanup };
 }
