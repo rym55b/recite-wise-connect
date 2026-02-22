@@ -12,6 +12,8 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import Matchmaking from "./pages/Matchmaking";
 import Session from "./pages/Session";
+import CreateGroupSession from "./pages/CreateGroupSession";
+import GroupSession from "./pages/GroupSession";
 import Stats from "./pages/Stats";
 import Invitations from "./pages/Invitations";
 import NotFound from "./pages/NotFound";
@@ -34,6 +36,8 @@ const App = () => (
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/matchmaking" element={<Matchmaking />} />
                 <Route path="/session/:id" element={<Session />} />
+                <Route path="/create-group-session" element={<CreateGroupSession />} />
+                <Route path="/group-session/:id" element={<GroupSession />} />
                 <Route path="/stats" element={<Stats />} />
                 <Route path="/invitations" element={<Invitations />} />
                 <Route path="*" element={<NotFound />} />
