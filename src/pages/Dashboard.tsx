@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, Users, ClipboardCheck, Star, Mail, MailOpen, Trophy, LogOut, User } from 'lucide-react';
+import { BookOpen, Users, ClipboardCheck, Star, Mail, MailOpen, Trophy, LogOut, User, Plus, Globe, Lock, Hash } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/lib/i18n';
@@ -10,13 +10,18 @@ import { IslamicPattern } from '@/components/IslamicPattern';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Dashboard() {
   const { t, dir } = useI18n();
   const { user, profile, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [invitations, setInvitations] = useState<any[]>([]);
   const [topStudents, setTopStudents] = useState<any[]>([]);
+  const [openSessions, setOpenSessions] = useState<any[]>([]);
+  const [joinCode, setJoinCode] = useState('');
 
   useEffect(() => {
     if (!loading && !user) navigate('/auth');
@@ -26,7 +31,7 @@ export default function Dashboard() {
     if (!profile) return;
 
     const fetchData = async () => {
-      const [invRes, topRes] = await Promise.all([
+      const [invRes, topRes, sessRes] = await Promise.all([
         supabase
           .from('invitations')
           .select('*, sender:profiles!invitations_sender_id_fkey(display_name, average_rating), receiver:profiles!invitations_receiver_id_fkey(display_name)')
@@ -38,16 +43,26 @@ export default function Dashboard() {
           .select('id, display_name, average_rating, level, total_sessions')
           .order('average_rating', { ascending: false })
           .limit(5),
+        supabase
+          .from('sessions')
+          .select('*, creator:profiles!sessions_user1_id_fkey(display_name, gender)')
+          .eq('is_group', true)
+          .eq('is_public', true)
+          .eq('status', 'active')
+          .limit(10),
       ]);
       setInvitations(invRes.data || []);
       setTopStudents(topRes.data || []);
+      // Filter by same gender
+      const filtered = (sessRes.data || []).filter((s: any) => s.creator?.gender === profile.gender);
+      setOpenSessions(filtered);
     };
     fetchData();
 
-    // Realtime invitations
     const channel = supabase
       .channel('dashboard-invitations')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'invitations' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, () => fetchData())
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -59,6 +74,36 @@ export default function Dashboard() {
 
   const handleRejectInvite = async (id: string) => {
     await supabase.from('invitations').update({ status: 'rejected' }).eq('id', id);
+  };
+
+  const joinByCode = async () => {
+    if (!joinCode.trim() || !profile) return;
+    const { data } = await supabase
+      .from('sessions')
+      .select('id')
+      .eq('access_code', joinCode.trim().toUpperCase())
+      .eq('status', 'active')
+      .eq('is_group', true)
+      .single();
+
+    if (data) {
+      await supabase.from('session_participants').insert({
+        session_id: data.id,
+        user_id: profile.id,
+      });
+      navigate(`/group-session/${data.id}`);
+    } else {
+      toast({ title: 'خطأ', description: 'رمز الدخول غير صحيح', variant: 'destructive' });
+    }
+  };
+
+  const joinPublicSession = async (sessionId: string) => {
+    if (!profile) return;
+    await supabase.from('session_participants').upsert({
+      session_id: sessionId,
+      user_id: profile.id,
+    });
+    navigate(`/group-session/${sessionId}`);
   };
 
   const levelLabel = (l: string) => {
@@ -114,27 +159,90 @@ export default function Dashboard() {
           </div>
         </motion.div>
 
-        {/* Session Types */}
-        <div>
-          <h3 className="mb-4 text-xl font-bold text-foreground">{t('startSession')}</h3>
-          <div className="grid gap-4 md:grid-cols-3">
-            {sessionTypes.map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
-                <Card
-                  className="group cursor-pointer border-border/50 transition-all hover:shadow-lg hover:border-primary/30 hover:-translate-y-1"
-                  onClick={() => navigate(`/matchmaking?type=${s.type}`)}
-                >
-                  <CardContent className="flex flex-col items-center p-6 text-center">
-                    <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                      <s.icon className="h-7 w-7 text-primary" />
+        {/* Session Actions: Individual + Group */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Individual Session */}
+          <Card className="border-border/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg">{t('startIndividual')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-3">
+                {sessionTypes.map((s, i) => (
+                  <button
+                    key={i}
+                    className="flex items-center gap-3 rounded-lg border border-border/50 p-3 text-start transition-all hover:shadow-md hover:border-primary/30 hover:bg-primary/5"
+                    onClick={() => navigate(`/matchmaking?type=${s.type}`)}
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                      <s.icon className="h-5 w-5 text-primary" />
                     </div>
-                    <h4 className="font-bold text-foreground">{s.title}</h4>
-                    <p className="mt-1 text-sm text-muted-foreground">{s.desc}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+                    <div>
+                      <p className="font-medium text-foreground">{s.title}</p>
+                      <p className="text-xs text-muted-foreground">{s.desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Group Session */}
+          <Card className="border-border/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" /> {t('groupSession')}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Button
+                className="w-full gradient-emerald border-0 text-primary-foreground gap-2"
+                onClick={() => navigate('/create-group-session')}
+              >
+                <Plus className="h-4 w-4" /> {t('createGroupSession')}
+              </Button>
+
+              {/* Join by code */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder={t('enterCode')}
+                  value={joinCode}
+                  onChange={e => setJoinCode(e.target.value)}
+                  className="font-mono uppercase"
+                  dir="ltr"
+                />
+                <Button variant="outline" onClick={joinByCode} disabled={!joinCode.trim()}>
+                  <Hash className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Open sessions */}
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">{t('openSessions')}</p>
+                {openSessions.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">{t('noOpenSessions')}</p>
+                ) : (
+                  openSessions.map(s => (
+                    <button
+                      key={s.id}
+                      className="w-full flex items-center justify-between rounded-lg border border-border/50 p-3 text-start transition-all hover:border-primary/30 hover:bg-primary/5"
+                      onClick={() => joinPublicSession(s.id)}
+                    >
+                      <div>
+                        <p className="font-medium text-foreground text-sm">{s.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {s.creator?.display_name} • {s.session_type === 'recitation' ? t('recitation') : s.session_type === 'memorization' ? t('memorization') : t('tests')}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="text-primary border-primary/30 shrink-0">
+                        <Globe className="h-3 w-3 mr-1" /> {t('joinSession')}
+                      </Badge>
+                    </button>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">

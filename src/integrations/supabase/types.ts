@@ -182,38 +182,108 @@ export type Database = {
           },
         ]
       }
+      session_participants: {
+        Row: {
+          hand_raised: boolean
+          id: string
+          is_muted_by_host: boolean
+          joined_at: string
+          left_at: string | null
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          hand_raised?: boolean
+          id?: string
+          is_muted_by_host?: boolean
+          joined_at?: string
+          left_at?: string | null
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          hand_raised?: boolean
+          id?: string
+          is_muted_by_host?: boolean
+          joined_at?: string
+          left_at?: string | null
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "session_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessions: {
         Row: {
+          access_code: string | null
           created_at: string
+          creator_id: string | null
           ended_at: string | null
           id: string
+          is_group: boolean
+          is_public: boolean
+          max_participants: number
           session_type: Database["public"]["Enums"]["session_type"]
           started_at: string | null
           status: Database["public"]["Enums"]["session_status"]
+          title: string | null
           user1_id: string
           user2_id: string
         }
         Insert: {
+          access_code?: string | null
           created_at?: string
+          creator_id?: string | null
           ended_at?: string | null
           id?: string
+          is_group?: boolean
+          is_public?: boolean
+          max_participants?: number
           session_type: Database["public"]["Enums"]["session_type"]
           started_at?: string | null
           status?: Database["public"]["Enums"]["session_status"]
+          title?: string | null
           user1_id: string
           user2_id: string
         }
         Update: {
+          access_code?: string | null
           created_at?: string
+          creator_id?: string | null
           ended_at?: string | null
           id?: string
+          is_group?: boolean
+          is_public?: boolean
+          max_participants?: number
           session_type?: Database["public"]["Enums"]["session_type"]
           started_at?: string | null
           status?: Database["public"]["Enums"]["session_status"]
+          title?: string | null
           user1_id?: string
           user2_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "sessions_creator_id_fkey"
+            columns: ["creator_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "sessions_user1_id_fkey"
             columns: ["user1_id"]
