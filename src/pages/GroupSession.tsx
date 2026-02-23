@@ -1,7 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Mic, MicOff, PhoneOff, Star, Clock, Hand, Copy, Users, Crown, VolumeX } from 'lucide-react';
+import { Mic, MicOff, PhoneOff, Star, Clock, Hand, Copy, Users, Crown, VolumeX, Share2, Link } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/lib/i18n';
@@ -131,6 +131,18 @@ export default function GroupSession() {
     }
   };
 
+  const sessionLink = `${window.location.origin}/group-session/${id}`;
+
+  const copySessionLink = () => {
+    navigator.clipboard.writeText(sessionLink);
+    toast({ title: t('linkCopied'), description: sessionLink });
+  };
+
+  const shareViaWhatsApp = () => {
+    const text = `${session?.title || t('groupSession')}\n${t('joinSession')}: ${sessionLink}${session?.access_code ? `\n${t('accessCode')}: ${session.access_code}` : ''}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
   const submitRating = async () => {
     toast({ title: t('ratePartner'), description: 'شكراً لتقييمك!' });
     navigate('/dashboard');
@@ -196,15 +208,25 @@ export default function GroupSession() {
           </div>
         </motion.div>
 
-        {/* Access code for private sessions */}
-        {!session.is_public && session.access_code && isCreator && (
-          <Card className="border-border/50">
-            <CardContent className="p-3 flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">{t('accessCode')}: <strong className="text-foreground font-mono">{session.access_code}</strong></span>
-              <Button size="sm" variant="ghost" onClick={copyAccessCode}><Copy className="h-4 w-4" /></Button>
-            </CardContent>
-          </Card>
-        )}
+        {/* Share & Access Code */}
+        <Card className="border-border/50">
+          <CardContent className="p-3 space-y-2">
+            {!session.is_public && session.access_code && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">{t('accessCode')}: <strong className="text-foreground font-mono">{session.access_code}</strong></span>
+                <Button size="sm" variant="ghost" onClick={copyAccessCode}><Copy className="h-4 w-4" /></Button>
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="outline" className="gap-1 flex-1" onClick={copySessionLink}>
+                <Link className="h-4 w-4" /> {t('copyLink')}
+              </Button>
+              <Button size="sm" variant="outline" className="gap-1 flex-1 text-green-600 border-green-600/30 hover:bg-green-600/10" onClick={shareViaWhatsApp}>
+                <Share2 className="h-4 w-4" /> {t('shareViaWhatsApp')}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Participants Grid */}
         <Card className="border-border/50">

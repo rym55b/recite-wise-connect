@@ -90,6 +90,10 @@ const translations = {
     joinByCode: 'انضمام برمز',
     creator: 'المنشئ',
     leaveSession: 'مغادرة الجلسة',
+    shareViaWhatsApp: 'مشاركة عبر واتساب',
+    copyLink: 'نسخ الرابط',
+    linkCopied: 'تم نسخ الرابط',
+    shareSession: 'مشاركة الجلسة',
   },
   en: {
     appName: 'Tilawati',
@@ -178,6 +182,10 @@ const translations = {
     joinByCode: 'Join by Code',
     creator: 'Creator',
     leaveSession: 'Leave Session',
+    shareViaWhatsApp: 'Share via WhatsApp',
+    copyLink: 'Copy Link',
+    linkCopied: 'Link Copied',
+    shareSession: 'Share Session',
   },
 } as const;
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, Users, ClipboardCheck, Star, Mail, MailOpen, Trophy, LogOut, User, Plus, Globe, Lock, Hash } from 'lucide-react';
+import { BookOpen, Users, ClipboardCheck, Star, Mail, MailOpen, Trophy, LogOut, User, Plus, Globe, Hash } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/lib/i18n';
@@ -245,6 +245,16 @@ export default function Dashboard() {
           </Card>
         </div>
 
+        {/* Stats & Invitations quick links */}
+        <div className="flex gap-4">
+          <Button variant="outline" onClick={() => navigate('/stats')} className="gap-2">
+            📊 {t('statistics')}
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/invitations')} className="gap-2">
+            <MailOpen className="h-4 w-4" /> {t('invitations')}
+          </Button>
+        </div>
+
         <div className="grid gap-6 md:grid-cols-2">
           {/* Invitations */}
           <Card className="border-border/50">
@@ -306,16 +316,6 @@ export default function Dashboard() {
               ))}
             </CardContent>
           </Card>
-        </div>
-
-        {/* Stats & History link */}
-        <div className="flex gap-4">
-          <Button variant="outline" onClick={() => navigate('/stats')} className="gap-2">
-            📊 {t('statistics')}
-          </Button>
-          <Button variant="outline" onClick={() => navigate('/invitations')} className="gap-2">
-            <MailOpen className="h-4 w-4" /> {t('invitations')}
-          </Button>
         </div>
       </main>
     </div>
