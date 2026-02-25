@@ -111,12 +111,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  if (!mounted) {
-    return <>{children}</>
-  }
-
+  // Provide context value even during hydration to prevent context errors
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, signup, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, isLoading: mounted ? isLoading : true, login, signup, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   )

@@ -34,10 +34,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     htmlElement.lang = lang
   }
 
-  if (!mounted) {
-    return <>{children}</>
-  }
-
+  // Provide context value even during hydration to prevent context errors
   return (
     <LanguageContext.Provider value={{ language, setLanguage, isRTL: language === 'ar' }}>
       {children}
