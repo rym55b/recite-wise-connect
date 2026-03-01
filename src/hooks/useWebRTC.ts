@@ -1,13 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
-const ICE_SERVERS: RTCConfiguration = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' },
-  ],
-};
+import { getIceServers } from '@/lib/iceServers';
 
 interface UseWebRTCOptions {
   sessionId: string;
@@ -73,8 +66,9 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
       source.connect(analyser);
       analyserRef.current = analyser;
 
-      // Create peer connection
-      const pc = new RTCPeerConnection(ICE_SERVERS);
+      // Fetch TURN credentials and create peer connection
+      const iceConfig = await getIceServers();
+      const pc = new RTCPeerConnection(iceConfig);
       pcRef.current = pc;
 
       // Add local tracks
