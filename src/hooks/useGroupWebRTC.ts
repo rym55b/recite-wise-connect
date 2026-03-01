@@ -1,12 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-
-const ICE_SERVERS: RTCConfiguration = {
-  iceServers: [
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-  ],
-};
+import { getIceServers } from '@/lib/iceServers';
 
 interface UseGroupWebRTCOptions {
   sessionId: string;
@@ -58,10 +52,11 @@ export function useGroupWebRTC({ sessionId, localUserId, participantIds, enabled
     }
   }, []);
 
-  const createPeerConnection = useCallback((remoteUserId: string, channel: ReturnType<typeof supabase.channel>) => {
+  const createPeerConnection = useCallback(async (remoteUserId: string, channel: ReturnType<typeof supabase.channel>) => {
     if (peersRef.current.has(remoteUserId)) return;
 
-    const pc = new RTCPeerConnection(ICE_SERVERS);
+    const iceConfig = await getIceServers();
+    const pc = new RTCPeerConnection(iceConfig);
     const peerState: PeerState = { pc, makingOffer: false, isSettingRemote: false };
     peersRef.current.set(remoteUserId, peerState);
 
@@ -168,7 +163,7 @@ export function useGroupWebRTC({ sessionId, localUserId, participantIds, enabled
 
         let peerState = peersRef.current.get(payload.from);
         if (!peerState) {
-          peerState = createPeerConnection(payload.from, channel);
+          peerState = await createPeerConnection(payload.from, channel);
           if (!peerState) return;
         }
 
@@ -209,10 +204,10 @@ export function useGroupWebRTC({ sessionId, localUserId, participantIds, enabled
       });
 
       // Ready signal
-      channel.on('broadcast', { event: 'ready' }, ({ payload }) => {
+      channel.on('broadcast', { event: 'ready' }, async ({ payload }) => {
         if (payload.from === localUserId) return;
         if (!peersRef.current.has(payload.from)) {
-          createPeerConnection(payload.from, channel);
+          await createPeerConnection(payload.from, channel);
         }
       });
 
@@ -227,9 +222,9 @@ export function useGroupWebRTC({ sessionId, localUserId, participantIds, enabled
       setTimeout(sendReady, 3000);
 
       // Create connections to existing participants
-      participantIds.forEach(pid => {
-        createPeerConnection(pid, channel);
-      });
+      for (const pid of participantIds) {
+        await createPeerConnection(pid, channel);
+      }
 
       // Speaking detection
       const detectSpeaking = () => {
