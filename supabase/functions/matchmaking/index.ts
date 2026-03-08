@@ -16,14 +16,18 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const { userId, sessionType, gender } = await req.json();
-    console.log('Matchmaking request:', { userId, sessionType, gender });
+    const { userId, sessionType, gender, role } = await req.json();
+    console.log('Matchmaking request:', { userId, sessionType, gender, role });
 
-    // Find other users in the queue with same session type
+    // Match reader with corrector and vice versa
+    const oppositeRole = role === 'reader' ? 'corrector' : 'reader';
+
+    // Find users in queue with opposite role and same gender
     const { data: queueEntries, error: queueError } = await supabase
       .from('matchmaking_queue')
-      .select('user_id, profiles!inner(id, gender)')
+      .select('user_id, role, profiles!inner(id, gender)')
       .eq('session_type', sessionType)
+      .eq('role', oppositeRole)
       .neq('user_id', userId)
       .order('joined_at', { ascending: true })
       .limit(10);
@@ -35,23 +39,23 @@ Deno.serve(async (req) => {
 
     console.log('Queue entries found:', queueEntries?.length, JSON.stringify(queueEntries));
 
-    // Try same-gender match first, then fallback to any match
-    let match = queueEntries?.find((entry: any) => entry.profiles?.gender === gender);
-    if (!match && queueEntries && queueEntries.length > 0) {
-      console.log('No same-gender match, using first available');
-      match = queueEntries[0];
-    }
+    // Match same gender first (mandatory)
+    const match = queueEntries?.find((entry: any) => entry.profiles?.gender === gender);
 
     if (match) {
-      console.log('Match found:', match.user_id);
+      console.log('Match found:', match.user_id, 'role:', match.role);
 
-      // Create session
+      // Determine who is reader and who is corrector
+      const readerId = role === 'reader' ? userId : match.user_id;
+      const correctorId = role === 'corrector' ? userId : match.user_id;
+
+      // Create session - user1 = reader, user2 = corrector
       const { data: session, error: sessionError } = await supabase
         .from('sessions')
         .insert({
           session_type: sessionType,
-          user1_id: userId,
-          user2_id: match.user_id,
+          user1_id: readerId,
+          user2_id: correctorId,
           status: 'active',
           started_at: new Date().toISOString(),
         })
