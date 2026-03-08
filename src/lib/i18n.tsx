@@ -115,6 +115,8 @@ const translations = {
     beginner: 'Beginner',
     intermediate: 'Intermediate',
     advanced: 'Advanced',
+    wantToRead: 'I Want to Read',
+    wantToCorrect: 'I Want to Correct',
     recitation: 'Recitation Correction',
     recitationDesc: 'Take turns reading and correcting with another student',
     memorization: 'Memorization (Tasmi\')',
