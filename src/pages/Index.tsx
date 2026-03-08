@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { BookOpen, Repeat, ClipboardCheck, Star, Users, Mic } from 'lucide-react';
+import { BookOpen, Repeat, ClipboardCheck, Star, Users, Mic, BookOpenCheck, PenTool } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
