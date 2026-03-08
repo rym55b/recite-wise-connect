@@ -28,9 +28,8 @@ export default function Index() {
   ];
 
   const sessionTypes = [
-    { icon: BookOpen, title: t('recitation'), desc: t('recitationDesc') },
-    { icon: Users, title: t('memorization'), desc: t('memorizationDesc') },
-    { icon: ClipboardCheck, title: t('tests'), desc: t('testsDesc') },
+    { icon: BookOpenCheck, title: t('wantToRead'), color: 'from-emerald-600 to-emerald-800' },
+    { icon: PenTool, title: t('wantToCorrect'), color: 'from-amber-500 to-amber-700' },
   ];
 
   return (
