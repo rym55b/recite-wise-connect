@@ -119,10 +119,9 @@ export default function Dashboard() {
     );
   }
 
-  const sessionTypes = [
-    { icon: BookOpen, title: t('recitation'), desc: t('recitationDesc'), type: 'recitation' },
-    { icon: Users, title: t('memorization'), desc: t('memorizationDesc'), type: 'memorization' },
-    { icon: ClipboardCheck, title: t('tests'), desc: t('testsDesc'), type: 'test' },
+  const roleOptions = [
+    { icon: BookOpenCheck, title: t('wantToRead'), role: 'reader', color: 'from-emerald-600 to-emerald-800' },
+    { icon: PenTool, title: t('wantToCorrect'), role: 'corrector', color: 'from-amber-500 to-amber-700' },
   ];
 
   return (
