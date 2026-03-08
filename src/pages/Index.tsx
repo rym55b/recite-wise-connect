@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { BookOpen, Repeat, ClipboardCheck, Star, Users, Mic } from 'lucide-react';
+import { BookOpen, Repeat, ClipboardCheck, Star, Users, Mic, BookOpenCheck, PenTool } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useAuth } from '@/hooks/useAuth';
@@ -28,9 +28,8 @@ export default function Index() {
   ];
 
   const sessionTypes = [
-    { icon: BookOpen, title: t('recitation'), desc: t('recitationDesc') },
-    { icon: Users, title: t('memorization'), desc: t('memorizationDesc') },
-    { icon: ClipboardCheck, title: t('tests'), desc: t('testsDesc') },
+    { icon: BookOpenCheck, title: t('wantToRead'), color: 'from-emerald-600 to-emerald-800' },
+    { icon: PenTool, title: t('wantToCorrect'), color: 'from-amber-500 to-amber-700' },
   ];
 
   return (
@@ -120,16 +119,15 @@ export default function Index() {
             {t('startSession')}
           </motion.h2>
 
-          <div className="mx-auto grid max-w-4xl gap-4 md:grid-cols-3">
+          <div className="mx-auto grid max-w-2xl gap-6 md:grid-cols-2">
             {sessionTypes.map((s, i) => (
               <motion.div key={i} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
                 <Card className="group cursor-pointer border-border/50 bg-card/80 backdrop-blur transition-all hover:shadow-xl hover:border-primary/30 hover:-translate-y-1">
-                  <CardContent className="flex flex-col items-center p-8 text-center">
-                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 transition-colors group-hover:bg-primary/20">
-                      <s.icon className="h-8 w-8 text-primary" />
+                  <CardContent className="flex flex-col items-center p-10 text-center">
+                    <div className={`mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${s.color} text-white shadow-lg transition-transform group-hover:scale-110`}>
+                      <s.icon className="h-10 w-10" />
                     </div>
-                    <h3 className="mb-2 text-lg font-bold text-foreground">{s.title}</h3>
-                    <p className="text-sm text-muted-foreground">{s.desc}</p>
+                    <h3 className="text-xl font-bold text-foreground">{s.title}</h3>
                   </CardContent>
                 </Card>
               </motion.div>
