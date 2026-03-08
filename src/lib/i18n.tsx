@@ -21,6 +21,8 @@ const translations = {
     beginner: 'مبتدئ',
     intermediate: 'متوسط',
     advanced: 'متقدم',
+    wantToRead: 'أريد أن أقرأ',
+    wantToCorrect: 'أريد أن أصحح',
     recitation: 'تصحيح التلاوة',
     recitationDesc: 'تبادل القراءة والتصحيح مع طالب آخر',
     memorization: 'الحفظ (التسميع)',
