@@ -13,7 +13,8 @@ export default function Matchmaking() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const sessionType = searchParams.get('type') || 'recitation';
+  const role = searchParams.get('role') || 'reader';
+  const sessionType = 'recitation'; // default session type
   const [_searching, setSearching] = useState(false);
   const [dots, setDots] = useState('');
 
