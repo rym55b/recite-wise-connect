@@ -110,7 +110,7 @@ export default function Matchmaking() {
           <div>
             <h2 className="text-2xl font-bold text-foreground">{t('waiting')}{dots}</h2>
             <p className="mt-2 text-muted-foreground">
-              {sessionType === 'recitation' ? t('recitation') : sessionType === 'memorization' ? t('memorization') : t('tests')}
+              {role === 'reader' ? t('wantToRead') : t('wantToCorrect')}
             </p>
           </div>
 

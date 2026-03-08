@@ -122,7 +122,10 @@ export default function Index() {
           <div className="mx-auto grid max-w-2xl gap-6 md:grid-cols-2">
             {sessionTypes.map((s, i) => (
               <motion.div key={i} custom={i} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-                <Card className="group cursor-pointer border-border/50 bg-card/80 backdrop-blur transition-all hover:shadow-xl hover:border-primary/30 hover:-translate-y-1">
+                <Card
+                  className="group cursor-pointer border-border/50 bg-card/80 backdrop-blur transition-all hover:shadow-xl hover:border-primary/30 hover:-translate-y-1"
+                  onClick={() => navigate(user ? `/matchmaking?role=${s.role}` : '/auth')}
+                >
                   <CardContent className="flex flex-col items-center p-10 text-center">
                     <div className={`mb-5 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${s.color} text-white shadow-lg transition-transform group-hover:scale-110`}>
                       <s.icon className="h-10 w-10" />

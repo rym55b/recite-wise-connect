@@ -167,19 +167,16 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-3">
-                {sessionTypes.map((s, i) => (
+                {roleOptions.map((s, i) => (
                   <button
                     key={i}
-                    className="flex items-center gap-3 rounded-lg border border-border/50 p-3 text-start transition-all hover:shadow-md hover:border-primary/30 hover:bg-primary/5"
-                    onClick={() => navigate(`/matchmaking?type=${s.type}`)}
+                    className="flex items-center gap-3 rounded-lg border border-border/50 p-4 text-start transition-all hover:shadow-md hover:border-primary/30 hover:bg-primary/5"
+                    onClick={() => navigate(`/matchmaking?role=${s.role}`)}
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10">
-                      <s.icon className="h-5 w-5 text-primary" />
+                    <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${s.color} text-white shadow-md`}>
+                      <s.icon className="h-6 w-6" />
                     </div>
-                    <div>
-                      <p className="font-medium text-foreground">{s.title}</p>
-                      <p className="text-xs text-muted-foreground">{s.desc}</p>
-                    </div>
+                    <p className="font-bold text-foreground text-lg">{s.title}</p>
                   </button>
                 ))}
               </div>
