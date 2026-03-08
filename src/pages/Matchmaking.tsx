@@ -32,6 +32,7 @@ export default function Matchmaking() {
     await supabase.from('matchmaking_queue').upsert({
       user_id: profile.id,
       session_type: sessionType as any,
+      role: role as any,
     });
 
     // Call edge function to attempt match
