@@ -43,7 +43,7 @@ export default function Matchmaking() {
     if (data?.sessionId) {
       navigate(`/session/${data.sessionId}`);
     }
-  }, [profile, sessionType, navigate]);
+  }, [profile, sessionType, role, navigate]);
 
   useEffect(() => {
     joinQueue();
