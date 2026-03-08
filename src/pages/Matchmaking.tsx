@@ -13,7 +13,8 @@ export default function Matchmaking() {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const sessionType = searchParams.get('type') || 'recitation';
+  const role = searchParams.get('role') || 'reader';
+  const sessionType = 'recitation'; // default session type
   const [_searching, setSearching] = useState(false);
   const [dots, setDots] = useState('');
 
@@ -31,17 +32,18 @@ export default function Matchmaking() {
     await supabase.from('matchmaking_queue').upsert({
       user_id: profile.id,
       session_type: sessionType as any,
+      role: role as any,
     });
 
     // Call edge function to attempt match
     const { data } = await supabase.functions.invoke('matchmaking', {
-      body: { userId: profile.id, sessionType, gender: profile.gender },
+      body: { userId: profile.id, sessionType, gender: profile.gender, role },
     });
 
     if (data?.sessionId) {
       navigate(`/session/${data.sessionId}`);
     }
-  }, [profile, sessionType, navigate]);
+  }, [profile, sessionType, role, navigate]);
 
   useEffect(() => {
     joinQueue();
@@ -108,7 +110,7 @@ export default function Matchmaking() {
           <div>
             <h2 className="text-2xl font-bold text-foreground">{t('waiting')}{dots}</h2>
             <p className="mt-2 text-muted-foreground">
-              {sessionType === 'recitation' ? t('recitation') : sessionType === 'memorization' ? t('memorization') : t('tests')}
+              {role === 'reader' ? t('wantToRead') : t('wantToCorrect')}
             </p>
           </div>
 

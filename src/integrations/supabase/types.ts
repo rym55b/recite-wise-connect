@@ -63,18 +63,21 @@ export type Database = {
         Row: {
           id: string
           joined_at: string
+          role: Database["public"]["Enums"]["matchmaking_role"]
           session_type: Database["public"]["Enums"]["session_type"]
           user_id: string
         }
         Insert: {
           id?: string
           joined_at?: string
+          role?: Database["public"]["Enums"]["matchmaking_role"]
           session_type: Database["public"]["Enums"]["session_type"]
           user_id: string
         }
         Update: {
           id?: string
           joined_at?: string
+          role?: Database["public"]["Enums"]["matchmaking_role"]
           session_type?: Database["public"]["Enums"]["session_type"]
           user_id?: string
         }
@@ -315,6 +318,7 @@ export type Database = {
       gender_type: "male" | "female"
       invitation_status: "pending" | "accepted" | "rejected"
       level_type: "beginner" | "intermediate" | "advanced"
+      matchmaking_role: "reader" | "corrector"
       session_status: "pending" | "active" | "completed" | "cancelled"
       session_type: "recitation" | "memorization" | "test"
     }
@@ -447,6 +451,7 @@ export const Constants = {
       gender_type: ["male", "female"],
       invitation_status: ["pending", "accepted", "rejected"],
       level_type: ["beginner", "intermediate", "advanced"],
+      matchmaking_role: ["reader", "corrector"],
       session_status: ["pending", "active", "completed", "cancelled"],
       session_type: ["recitation", "memorization", "test"],
     },
