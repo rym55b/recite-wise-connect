@@ -37,7 +37,7 @@ export default function Matchmaking() {
 
     // Call edge function to attempt match
     const { data } = await supabase.functions.invoke('matchmaking', {
-      body: { userId: profile.id, sessionType, gender: profile.gender },
+      body: { userId: profile.id, sessionType, gender: profile.gender, role },
     });
 
     if (data?.sessionId) {
