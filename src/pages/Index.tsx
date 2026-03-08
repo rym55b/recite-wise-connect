@@ -28,8 +28,8 @@ export default function Index() {
   ];
 
   const sessionTypes = [
-    { icon: BookOpenCheck, title: t('wantToRead'), color: 'from-emerald-600 to-emerald-800' },
-    { icon: PenTool, title: t('wantToCorrect'), color: 'from-amber-500 to-amber-700' },
+    { icon: BookOpenCheck, title: t('wantToRead'), color: 'from-emerald-600 to-emerald-800', role: 'reader' },
+    { icon: PenTool, title: t('wantToCorrect'), color: 'from-amber-500 to-amber-700', role: 'corrector' },
   ];
 
   return (
