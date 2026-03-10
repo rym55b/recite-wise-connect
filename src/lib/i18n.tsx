@@ -96,6 +96,13 @@ const translations = {
     copyLink: 'نسخ الرابط',
     linkCopied: 'تم نسخ الرابط',
     shareSession: 'مشاركة الجلسة',
+    messages: 'الرسائل',
+    typeMessage: 'اكتب رسالة...',
+    noMessages: 'لا توجد رسائل بعد',
+    sessionChat: 'محادثة الجلسة',
+    noConversations: 'لا توجد محادثات بعد',
+    searchUser: 'ابحث عن مستخدم...',
+    selectConversation: 'اختر محادثة للبدء',
   },
   en: {
     appName: 'Tilawati',
