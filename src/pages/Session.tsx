@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mic, MicOff, PhoneOff, Star, Clock } from 'lucide-react';
@@ -26,12 +26,19 @@ export default function Session() {
   const [stars, setStars] = useState(5);
   const [comment, setComment] = useState('');
 
+  // Handle remote peer ending the session
+  const handleRemoteEnd = useCallback(() => {
+    toast({ title: 'انتهت الجلسة', description: 'قام الطرف الآخر بإنهاء الجلسة' });
+    setShowRating(true);
+  }, [toast]);
+
   // WebRTC voice connection
-  const { connected, remoteIsSpeaking, muted, toggleMute, cleanup: cleanupWebRTC } = useWebRTC({
+  const { connected, remoteIsSpeaking, muted, toggleMute, cleanup: cleanupWebRTC, sendEndSignal } = useWebRTC({
     sessionId: id || '',
     localUserId: profile?.id || '',
     remoteUserId: partner?.id || '',
     enabled: !!session && !!partner && !showRating,
+    onRemoteEnd: handleRemoteEnd,
   });
   // Timer
   useEffect(() => {
@@ -63,6 +70,7 @@ export default function Session() {
 
   const endSession = async () => {
     if (!id) return;
+    sendEndSignal(); // notify the other peer instantly
     await supabase
       .from('sessions')
       .update({ status: 'completed', ended_at: new Date().toISOString() })

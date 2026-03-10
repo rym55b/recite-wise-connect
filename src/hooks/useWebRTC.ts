@@ -7,9 +7,10 @@ interface UseWebRTCOptions {
   localUserId: string;
   remoteUserId: string;
   enabled: boolean;
+  onRemoteEnd?: () => void;
 }
 
-export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: UseWebRTCOptions) {
+export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled, onRemoteEnd }: UseWebRTCOptions) {
   const [connected, setConnected] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [remoteIsSpeaking, setRemoteIsSpeaking] = useState(false);
@@ -24,7 +25,7 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
   const makingOfferRef = useRef(false);
   const isSettingRemoteRef = useRef(false);
 
-  const isPolite = localUserId > remoteUserId; // polite peer yields on collision
+  const isPolite = localUserId > remoteUserId;
 
   const cleanup = useCallback(() => {
     cancelAnimationFrame(animFrameRef.current);
@@ -38,6 +39,14 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
     }
     setConnected(false);
   }, []);
+
+  const sendEndSignal = useCallback(() => {
+    channelRef.current?.send({
+      type: 'broadcast',
+      event: 'session-end',
+      payload: { from: localUserId },
+    });
+  }, [localUserId]);
 
   const toggleMute = useCallback(() => {
     const track = localStreamRef.current?.getAudioTracks()[0];
@@ -53,12 +62,10 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
     let cancelled = false;
 
     const start = async () => {
-      // Get microphone
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       if (cancelled) { stream.getTracks().forEach(t => t.stop()); return; }
       localStreamRef.current = stream;
 
-      // Audio analysis for speaking indicator
       const audioCtx = new AudioContext();
       const source = audioCtx.createMediaStreamSource(stream);
       const analyser = audioCtx.createAnalyser();
@@ -66,15 +73,12 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
       source.connect(analyser);
       analyserRef.current = analyser;
 
-      // Fetch TURN credentials and create peer connection
       const iceConfig = await getIceServers();
       const pc = new RTCPeerConnection(iceConfig);
       pcRef.current = pc;
 
-      // Add local tracks
       stream.getTracks().forEach(track => pc.addTrack(track, stream));
 
-      // Remote track handling
       pc.ontrack = (e) => {
         const remoteAudio = document.getElementById('remote-audio') as HTMLAudioElement;
         if (remoteAudio && e.streams[0]) {
@@ -93,13 +97,22 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
         setConnected(true);
       };
 
-      // Signaling channel via Supabase Realtime broadcast
+      // Signaling channel
       const channel = supabase.channel(`webrtc-${sessionId}`, {
         config: { broadcast: { self: false } },
       });
       channelRef.current = channel;
 
-      // "Perfect negotiation" pattern - handle signals
+      // Listen for session end from remote
+      channel.on('broadcast', { event: 'session-end' }, ({ payload }) => {
+        if (payload.from !== localUserId) {
+          console.log('Remote peer ended session');
+          cleanup();
+          onRemoteEnd?.();
+        }
+      });
+
+      // Perfect negotiation signals
       channel.on('broadcast', { event: 'signal' }, async ({ payload }) => {
         if (!pcRef.current || payload.from === localUserId) return;
         const pc = pcRef.current;
@@ -111,8 +124,6 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
               (makingOfferRef.current || pc.signalingState !== 'stable');
 
             if (offerCollision && !isPolite) {
-              // Impolite peer ignores the offer collision
-              console.log('Ignoring colliding offer (impolite)');
               return;
             }
 
@@ -143,7 +154,6 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
         }
       });
 
-      // ICE candidates
       pc.onicecandidate = (e) => {
         if (e.candidate && channelRef.current) {
           channelRef.current.send({
@@ -154,7 +164,6 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
         }
       };
 
-      // Use negotiationneeded for perfect negotiation
       pc.onnegotiationneeded = async () => {
         try {
           makingOfferRef.current = true;
@@ -175,57 +184,44 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
         const state = pc.connectionState;
         console.log('WebRTC connection state:', state);
         setConnected(state === 'connected');
-        // Retry if failed
-        if (state === 'failed') {
-          pc.restartIce();
-        }
+        if (state === 'failed') pc.restartIce();
       };
 
       pc.oniceconnectionstatechange = () => {
-        console.log('ICE connection state:', pc.iceConnectionState);
-        if (pc.iceConnectionState === 'failed') {
-          pc.restartIce();
-        }
+        if (pc.iceConnectionState === 'failed') pc.restartIce();
       };
 
-      // Subscribe to channel
-      await channel.subscribe();
-      console.log('Subscribed to signaling channel:', `webrtc-${sessionId}`);
+      // Use Presence to detect when both peers are online
+      await channel.subscribe(async (status) => {
+        if (status !== 'SUBSCRIBED') return;
+        console.log('Subscribed to signaling channel');
 
-      // Announce presence so the other peer knows we're ready
-      // Both peers send a "ready" message; when one receives it, it triggers renegotiation
-      channel.on('broadcast', { event: 'ready' }, async ({ payload }) => {
-        if (payload.from === localUserId) return;
-        console.log('Remote peer is ready, triggering negotiation');
-        // The onnegotiationneeded should already fire from addTrack,
-        // but if it didn't (race), we can trigger manually for the initiator
-        if (localUserId < remoteUserId && pc.signalingState === 'stable' && !makingOfferRef.current) {
-          try {
-            makingOfferRef.current = true;
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            channel.send({
-              type: 'broadcast',
-              event: 'signal',
-              payload: { from: localUserId, type: 'offer', sdp: pc.localDescription },
-            });
-          } catch (err) {
-            console.error('Manual offer error:', err);
-          } finally {
-            makingOfferRef.current = false;
+        // Track presence
+        await channel.track({ user_id: localUserId });
+      });
+
+      // When presence syncs, check if remote peer is already there
+      channel.on('presence', { event: 'join' }, ({ newPresences }) => {
+        const remoteJoined = newPresences.some((p: any) => p.user_id === remoteUserId);
+        if (remoteJoined && pc.signalingState === 'stable' && !makingOfferRef.current) {
+          // Deterministic initiator: lower ID creates the offer
+          if (localUserId < remoteUserId) {
+            console.log('Remote peer joined, initiating offer');
+            triggerOffer(pc, channel);
           }
         }
       });
 
-      // Send ready signal with retries to ensure the other peer sees it
-      const sendReady = () => {
-        channel.send({ type: 'broadcast', event: 'ready', payload: { from: localUserId } });
-      };
-      // Send multiple times with delay to handle race conditions
-      sendReady();
-      setTimeout(sendReady, 1000);
-      setTimeout(sendReady, 3000);
-      setTimeout(sendReady, 6000);
+      channel.on('presence', { event: 'sync' }, () => {
+        const state = channel.presenceState();
+        const remotePresent = Object.values(state).flat().some((p: any) => p.user_id === remoteUserId);
+        if (remotePresent && pc.signalingState === 'stable' && !makingOfferRef.current) {
+          if (localUserId < remoteUserId) {
+            console.log('Presence sync: remote peer present, initiating offer');
+            triggerOffer(pc, channel);
+          }
+        }
+      });
 
       // Speaking detection loop
       const detectSpeaking = () => {
@@ -246,13 +242,30 @@ export function useWebRTC({ sessionId, localUserId, remoteUserId, enabled }: Use
       detectSpeaking();
     };
 
+    const triggerOffer = async (pc: RTCPeerConnection, channel: ReturnType<typeof supabase.channel>) => {
+      try {
+        makingOfferRef.current = true;
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
+        channel.send({
+          type: 'broadcast',
+          event: 'signal',
+          payload: { from: localUserId, type: 'offer', sdp: pc.localDescription },
+        });
+      } catch (err) {
+        console.error('Manual offer error:', err);
+      } finally {
+        makingOfferRef.current = false;
+      }
+    };
+
     start().catch(err => console.error('WebRTC error:', err));
 
     return () => {
       cancelled = true;
       cleanup();
     };
-  }, [enabled, sessionId, localUserId, remoteUserId, isPolite, cleanup]);
+  }, [enabled, sessionId, localUserId, remoteUserId, isPolite, cleanup, onRemoteEnd]);
 
-  return { connected, isSpeaking, remoteIsSpeaking, muted, toggleMute, cleanup };
+  return { connected, isSpeaking, remoteIsSpeaking, muted, toggleMute, cleanup, sendEndSignal };
 }
