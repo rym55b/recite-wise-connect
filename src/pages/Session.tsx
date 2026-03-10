@@ -202,6 +202,9 @@ export default function Session() {
           {muted ? t('mute') : t('unmute')}
         </p>
         <audio id="remote-audio" autoPlay playsInline />
+
+        {/* Session Chat */}
+        <ChatBox sessionId={id} mode="floating" />
       </main>
     </div>
   );
