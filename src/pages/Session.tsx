@@ -26,12 +26,19 @@ export default function Session() {
   const [stars, setStars] = useState(5);
   const [comment, setComment] = useState('');
 
+  // Handle remote peer ending the session
+  const handleRemoteEnd = useCallback(() => {
+    toast({ title: 'انتهت الجلسة', description: 'قام الطرف الآخر بإنهاء الجلسة' });
+    setShowRating(true);
+  }, [toast]);
+
   // WebRTC voice connection
-  const { connected, remoteIsSpeaking, muted, toggleMute, cleanup: cleanupWebRTC } = useWebRTC({
+  const { connected, remoteIsSpeaking, muted, toggleMute, cleanup: cleanupWebRTC, sendEndSignal } = useWebRTC({
     sessionId: id || '',
     localUserId: profile?.id || '',
     remoteUserId: partner?.id || '',
     enabled: !!session && !!partner && !showRating,
+    onRemoteEnd: handleRemoteEnd,
   });
   // Timer
   useEffect(() => {
