@@ -70,6 +70,7 @@ export default function Session() {
 
   const endSession = async () => {
     if (!id) return;
+    sendEndSignal(); // notify the other peer instantly
     await supabase
       .from('sessions')
       .update({ status: 'completed', ended_at: new Date().toISOString() })
