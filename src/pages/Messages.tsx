@@ -7,6 +7,7 @@ import { useI18n } from '@/lib/i18n';
 import { Navbar } from '@/components/Navbar';
 import { ChatBox } from '@/components/ChatBox';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface Conversation {
   partnerId: string;
@@ -18,8 +19,7 @@ interface Conversation {
 
 export default function Messages() {
   const { profile } = useAuth();
-  const { t, dir } = useI18n();
-  const navigate = useNavigate();
+  const { dir } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedId = searchParams.get('chat');
 
@@ -29,12 +29,10 @@ export default function Messages() {
   const [allProfiles, setAllProfiles] = useState<any[]>([]);
   const [showSearch, setShowSearch] = useState(false);
 
-  // Load conversations
   useEffect(() => {
     if (!profile) return;
 
     const loadConversations = async () => {
-      // Get all private messages for this user
       const { data: msgs } = await supabase
         .from('messages')
         .select('*')
@@ -44,7 +42,6 @@ export default function Messages() {
 
       if (!msgs) return;
 
-      // Group by conversation partner
       const convMap = new Map<string, { lastMsg: any; unread: number }>();
       for (const msg of msgs) {
         const partnerId = msg.sender_id === profile.id ? msg.receiver_id : msg.sender_id;
@@ -62,7 +59,6 @@ export default function Messages() {
         }
       }
 
-      // Fetch partner profiles
       const partnerIds = Array.from(convMap.keys());
       if (partnerIds.length === 0) { setConversations([]); return; }
 
@@ -90,7 +86,6 @@ export default function Messages() {
     loadConversations();
   }, [profile]);
 
-  // If selectedId from URL, load partner info
   useEffect(() => {
     if (!selectedId || !profile) return;
 
@@ -107,7 +102,6 @@ export default function Messages() {
     loadPartner();
   }, [selectedId, profile]);
 
-  // Search for users to start new conversation
   const searchUsers = async (query: string) => {
     setSearchQuery(query);
     if (query.length < 2) { setAllProfiles([]); return; }
@@ -235,7 +229,6 @@ export default function Messages() {
           <div className={`${selectedPartner ? 'flex' : 'hidden md:flex'} flex-1 flex-col`}>
             {selectedPartner ? (
               <>
-                {/* Mobile back button */}
                 <div className="flex items-center gap-2 md:hidden border-b border-border/50 px-3 py-2">
                   <Button
                     variant="ghost"
@@ -269,6 +262,3 @@ export default function Messages() {
     </div>
   );
 }
-
-// Need to import Button
-import { Button } from '@/components/ui/button';
