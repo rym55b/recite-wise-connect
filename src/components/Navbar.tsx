@@ -1,4 +1,4 @@
-import { Moon, Sun, Globe, LogOut, User } from 'lucide-react';
+import { Moon, Sun, Globe, LogOut, User, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
