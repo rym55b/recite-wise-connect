@@ -1,4 +1,4 @@
-import { Moon, Sun, Globe, LogOut, User } from 'lucide-react';
+import { Moon, Sun, Globe, LogOut, User, MessageSquare } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
@@ -31,6 +31,9 @@ export function Navbar() {
 
           {user ? (
             <>
+              <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate('/messages')}>
+                <MessageSquare className="h-5 w-5" />
+              </Button>
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate('/profile')}>
                 <User className="h-5 w-5" />
               </Button>

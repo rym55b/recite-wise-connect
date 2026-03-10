@@ -10,6 +10,7 @@ import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { ChatBox } from '@/components/ChatBox';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Session() {
@@ -201,6 +202,9 @@ export default function Session() {
           {muted ? t('mute') : t('unmute')}
         </p>
         <audio id="remote-audio" autoPlay playsInline />
+
+        {/* Session Chat */}
+        <ChatBox sessionId={id} mode="floating" />
       </main>
     </div>
   );
