@@ -197,6 +197,13 @@ const translations = {
     copyLink: 'Copy Link',
     linkCopied: 'Link Copied',
     shareSession: 'Share Session',
+    messages: 'Messages',
+    typeMessage: 'Type a message...',
+    noMessages: 'No messages yet',
+    sessionChat: 'Session Chat',
+    noConversations: 'No conversations yet',
+    searchUser: 'Search for a user...',
+    selectConversation: 'Select a conversation to start',
   },
 } as const;
 
