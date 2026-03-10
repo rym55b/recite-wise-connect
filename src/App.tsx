@@ -41,6 +41,7 @@ const App = () => (
                 <Route path="/group-session/:id" element={<GroupSession />} />
                 <Route path="/stats" element={<Stats />} />
                 <Route path="/invitations" element={<Invitations />} />
+                <Route path="/messages" element={<Messages />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
