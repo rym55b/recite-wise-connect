@@ -263,24 +263,36 @@ export default function Dashboard() {
               {invitations.length === 0 ? (
                 <p className="text-sm text-muted-foreground">{t('noResults')}</p>
               ) : (
-                invitations.map(inv => (
-                  <div key={inv.id} className="flex items-center justify-between rounded-lg border border-border/50 p-3">
-                    <div>
-                      <p className="font-medium text-foreground">
-                        {inv.sender_id === profile.id ? inv.receiver?.display_name : inv.sender?.display_name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{inv.session_type}</p>
-                    </div>
-                    {inv.receiver_id === profile.id ? (
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => handleRejectInvite(inv.id)}>{t('cancel')}</Button>
-                        <Button size="sm" className="gradient-emerald border-0 text-primary-foreground" onClick={() => handleAcceptInvite(inv.id)}>قبول</Button>
+                invitations.map(inv => {
+                  const partnerId = inv.sender_id === profile.id ? inv.receiver_id : inv.sender_id;
+                  const partnerName = inv.sender_id === profile.id ? inv.receiver?.display_name : inv.sender?.display_name;
+                  return (
+                    <div key={inv.id} className="flex items-center justify-between rounded-lg border border-border/50 p-3">
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <p className="font-medium text-foreground">{partnerName}</p>
+                          <p className="text-xs text-muted-foreground">{inv.session_type}</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 rounded-full text-primary hover:bg-primary/10"
+                          onClick={() => navigate(`/messages?chat=${partnerId}`)}
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
-                    ) : (
-                      <Badge variant="secondary">{t('sentInvites')}</Badge>
-                    )}
-                  </div>
-                ))
+                      {inv.receiver_id === profile.id ? (
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" onClick={() => handleRejectInvite(inv.id)}>{t('cancel')}</Button>
+                          <Button size="sm" className="gradient-emerald border-0 text-primary-foreground" onClick={() => handleAcceptInvite(inv.id)}>قبول</Button>
+                        </div>
+                      ) : (
+                        <Badge variant="secondary">{t('sentInvites')}</Badge>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </CardContent>
           </Card>
