@@ -306,7 +306,11 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="space-y-3">
               {topStudents.map((s, i) => (
-                <div key={s.id} className="flex items-center justify-between rounded-lg border border-border/50 p-3">
+                <button
+                  key={s.id}
+                  onClick={() => s.id !== profile.id ? navigate(`/user/${s.id}`) : navigate('/profile')}
+                  className="flex w-full items-center justify-between rounded-lg border border-border/50 p-3 text-start transition-all hover:border-primary/30 hover:bg-primary/5"
+                >
                   <div className="flex items-center gap-3">
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gold/10 text-sm font-bold text-gold">
                       {i + 1}
@@ -316,23 +320,11 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{levelLabel(s.level)}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {s.id !== profile.id && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 rounded-full text-primary hover:bg-primary/10"
-                        onClick={() => navigate(`/messages?chat=${s.id}`)}
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                      </Button>
-                    )}
-                    <div className="flex items-center gap-1 text-gold">
-                      <Star className="h-4 w-4 fill-current" />
-                      <span className="text-sm font-bold">{Number(s.average_rating).toFixed(1)}</span>
-                    </div>
+                  <div className="flex items-center gap-1 text-gold">
+                    <Star className="h-4 w-4 fill-current" />
+                    <span className="text-sm font-bold">{Number(s.average_rating).toFixed(1)}</span>
                   </div>
-                </div>
+                </button>
               ))}
             </CardContent>
           </Card>
