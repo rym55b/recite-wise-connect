@@ -108,8 +108,9 @@ export function ChatBox({ sessionId, receiverId, receiverName, mode = 'floating'
         }
         setMessages(prev => [...prev, msg]);
         scrollToBottom();
-        if (!open && msg.sender_id !== profile.id) {
-          setUnread(u => u + 1);
+        if (msg.sender_id !== profile.id) {
+          playNotificationSound();
+          if (!open) setUnread(u => u + 1);
         }
       })
       .subscribe();
