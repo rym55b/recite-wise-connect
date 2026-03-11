@@ -318,8 +318,8 @@ export default function Dashboard() {
                     <div>
                       <p className="font-medium text-foreground">{s.display_name}</p>
                       <p className="text-xs text-muted-foreground">{levelLabel(s.level)}</p>
-                    </div>
                   </div>
+                </button>
                   <div className="flex items-center gap-2">
                     {s.id !== profile.id && (
                       <Button
