@@ -306,7 +306,11 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent className="space-y-3">
               {topStudents.map((s, i) => (
-                <div key={s.id} className="flex items-center justify-between rounded-lg border border-border/50 p-3">
+                <button
+                  key={s.id}
+                  onClick={() => s.id !== profile.id ? navigate(`/user/${s.id}`) : navigate('/profile')}
+                  className="flex w-full items-center justify-between rounded-lg border border-border/50 p-3 text-start transition-all hover:border-primary/30 hover:bg-primary/5"
+                >
                   <div className="flex items-center gap-3">
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-gold/10 text-sm font-bold text-gold">
                       {i + 1}
