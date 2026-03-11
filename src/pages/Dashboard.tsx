@@ -304,9 +304,21 @@ export default function Dashboard() {
                       <p className="text-xs text-muted-foreground">{levelLabel(s.level)}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-1 text-gold">
-                    <Star className="h-4 w-4 fill-current" />
-                    <span className="text-sm font-bold">{Number(s.average_rating).toFixed(1)}</span>
+                  <div className="flex items-center gap-2">
+                    {s.id !== profile.id && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-full text-primary hover:bg-primary/10"
+                        onClick={() => navigate(`/messages?chat=${s.id}`)}
+                      >
+                        <MessageSquare className="h-4 w-4" />
+                      </Button>
+                    )}
+                    <div className="flex items-center gap-1 text-gold">
+                      <Star className="h-4 w-4 fill-current" />
+                      <span className="text-sm font-bold">{Number(s.average_rating).toFixed(1)}</span>
+                    </div>
                   </div>
                 </div>
               ))}
