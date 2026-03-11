@@ -17,6 +17,7 @@ import GroupSession from "./pages/GroupSession";
 import Stats from "./pages/Stats";
 import Invitations from "./pages/Invitations";
 import Messages from "./pages/Messages";
+import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
