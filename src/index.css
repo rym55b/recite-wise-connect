@@ -144,4 +144,8 @@
   .text-emerald-theme {
     color: hsl(var(--emerald));
   }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }

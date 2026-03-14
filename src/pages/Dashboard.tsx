@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BookOpenCheck, PenTool, Users, Star, Mail, MailOpen, Trophy, LogOut, User, Plus, Globe, Hash, MessageSquare } from 'lucide-react';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/lib/i18n';
@@ -125,35 +126,38 @@ export default function Dashboard() {
   ];
 
   return (
-    <div dir={dir} className="min-h-screen bg-background">
+    <div dir={dir} className="min-h-screen bg-background pb-20 md:pb-0">
       <Navbar />
+      <MobileBottomNav />
 
-      <main className="container mx-auto px-4 py-8 space-y-8">
+      <main className="container mx-auto px-3 md:px-4 py-4 md:py-8 space-y-4 md:space-y-8">
         {/* Welcome */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="relative overflow-hidden rounded-2xl gradient-emerald p-6 text-primary-foreground"
+          className="relative overflow-hidden rounded-xl md:rounded-2xl gradient-emerald p-4 md:p-6 text-primary-foreground"
         >
           <IslamicPattern className="text-primary-foreground" opacity={0.08} />
-          <div className="relative z-10 flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">{t('welcomeBack')}، {profile.display_name}</h2>
-              <div className="mt-2 flex gap-4 text-primary-foreground/80">
-                <span className="flex items-center gap-1"><Star className="h-4 w-4" /> {Number(profile.average_rating).toFixed(1)}</span>
-                <span>{profile.total_sessions} {t('sessions')}</span>
-                <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground">
-                  {levelLabel(profile.level)}
-                </Badge>
+          <div className="relative z-10">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <h2 className="text-lg md:text-2xl font-bold truncate">{t('welcomeBack')}، {profile.display_name}</h2>
+                <div className="mt-1.5 md:mt-2 flex flex-wrap gap-2 md:gap-4 text-primary-foreground/80 text-sm">
+                  <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5 md:h-4 md:w-4" /> {Number(profile.average_rating).toFixed(1)}</span>
+                  <span>{profile.total_sessions} {t('sessions')}</span>
+                  <Badge variant="secondary" className="bg-primary-foreground/20 text-primary-foreground text-xs">
+                    {levelLabel(profile.level)}
+                  </Badge>
+                </div>
               </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={() => navigate('/profile')}>
-                <User className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10" onClick={signOut}>
-                <LogOut className="h-5 w-5" />
-              </Button>
+              <div className="flex gap-1 shrink-0">
+                <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 md:h-10 md:w-10" onClick={() => navigate('/profile')}>
+                  <User className="h-4 w-4 md:h-5 md:w-5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/10 h-8 w-8 md:h-10 md:w-10 hidden md:inline-flex" onClick={signOut}>
+                  <LogOut className="h-4 w-4 md:h-5 md:w-5" />
+                </Button>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -242,11 +246,11 @@ export default function Dashboard() {
         </div>
 
         {/* Stats & Invitations quick links */}
-        <div className="flex gap-4">
-          <Button variant="outline" onClick={() => navigate('/stats')} className="gap-2">
+        <div className="flex gap-2 md:gap-4 overflow-x-auto">
+          <Button variant="outline" onClick={() => navigate('/stats')} className="gap-2 shrink-0 text-sm h-9 md:h-10">
             📊 {t('statistics')}
           </Button>
-          <Button variant="outline" onClick={() => navigate('/invitations')} className="gap-2">
+          <Button variant="outline" onClick={() => navigate('/invitations')} className="gap-2 shrink-0 text-sm h-9 md:h-10">
             <MailOpen className="h-4 w-4" /> {t('invitations')}
           </Button>
         </div>

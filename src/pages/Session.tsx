@@ -139,14 +139,14 @@ export default function Session() {
   return (
     <div dir={dir} className="min-h-screen bg-background">
       <Navbar />
-      <main className="container mx-auto flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-8 px-4">
+      <main className="container mx-auto flex min-h-[calc(100vh-3.5rem)] md:min-h-[calc(100vh-4rem)] flex-col items-center justify-center gap-4 md:gap-8 px-3 md:px-4 py-4">
         {/* Timer */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex items-center gap-2 text-3xl font-mono text-foreground"
+          className="flex items-center gap-2 text-2xl md:text-3xl font-mono text-foreground"
         >
-          <Clock className="h-6 w-6 text-muted-foreground" />
+          <Clock className="h-5 w-5 md:h-6 md:w-6 text-muted-foreground" />
           {formatTime(elapsed)}
         </motion.div>
 
@@ -154,15 +154,15 @@ export default function Session() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-4"
+          className="flex flex-col items-center gap-3 md:gap-4"
         >
           <div className="relative">
-            <div className={`flex h-24 w-24 items-center justify-center rounded-full ${remoteIsSpeaking ? 'ring-4 ring-primary/50 animate-pulse' : ''} bg-primary/10`}>
-              <span className="text-3xl font-bold text-primary">{partner.display_name[0]}</span>
+            <div className={`flex h-16 w-16 md:h-24 md:w-24 items-center justify-center rounded-full ${remoteIsSpeaking ? 'ring-4 ring-primary/50 animate-pulse' : ''} bg-primary/10`}>
+              <span className="text-2xl md:text-3xl font-bold text-primary">{partner.display_name[0]}</span>
             </div>
           </div>
           <div className="text-center">
-            <h3 className="text-xl font-bold text-foreground">{partner.display_name}</h3>
+            <h3 className="text-lg md:text-xl font-bold text-foreground">{partner.display_name}</h3>
             <p className="text-xs text-muted-foreground">
               {connected ? '🟢 متصل' : '🔴 جارٍ الاتصال...'}
             </p>
@@ -174,7 +174,7 @@ export default function Session() {
         </motion.div>
 
         {/* Session type badge */}
-        <div className="rounded-full bg-primary/10 px-4 py-1 text-sm text-primary font-medium">
+        <div className="rounded-full bg-primary/10 px-3 md:px-4 py-1 text-xs md:text-sm text-primary font-medium">
           {session.session_type === 'recitation' ? t('recitation') : session.session_type === 'memorization' ? t('memorization') : t('tests')}
         </div>
 
@@ -183,18 +183,18 @@ export default function Session() {
           <Button
             size="lg"
             variant={muted ? 'destructive' : 'outline'}
-            className="h-16 w-16 rounded-full"
+            className="h-14 w-14 md:h-16 md:w-16 rounded-full"
             onClick={toggleMute}
           >
-            {muted ? <MicOff className="h-6 w-6" /> : <Mic className="h-6 w-6" />}
+            {muted ? <MicOff className="h-5 w-5 md:h-6 md:w-6" /> : <Mic className="h-5 w-5 md:h-6 md:w-6" />}
           </Button>
           <Button
             size="lg"
             variant="destructive"
-            className="h-16 w-16 rounded-full"
+            className="h-14 w-14 md:h-16 md:w-16 rounded-full"
             onClick={endSession}
           >
-            <PhoneOff className="h-6 w-6" />
+            <PhoneOff className="h-5 w-5 md:h-6 md:w-6" />
           </Button>
         </div>
 
