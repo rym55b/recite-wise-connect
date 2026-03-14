@@ -246,11 +246,11 @@ export default function Dashboard() {
         </div>
 
         {/* Stats & Invitations quick links */}
-        <div className="flex gap-4">
-          <Button variant="outline" onClick={() => navigate('/stats')} className="gap-2">
+        <div className="flex gap-2 md:gap-4 overflow-x-auto">
+          <Button variant="outline" onClick={() => navigate('/stats')} className="gap-2 shrink-0 text-sm h-9 md:h-10">
             📊 {t('statistics')}
           </Button>
-          <Button variant="outline" onClick={() => navigate('/invitations')} className="gap-2">
+          <Button variant="outline" onClick={() => navigate('/invitations')} className="gap-2 shrink-0 text-sm h-9 md:h-10">
             <MailOpen className="h-4 w-4" /> {t('invitations')}
           </Button>
         </div>
