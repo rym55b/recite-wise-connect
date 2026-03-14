@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { BookOpenCheck, PenTool, Users, Star, Mail, MailOpen, Trophy, LogOut, User, Plus, Globe, Hash, MessageSquare } from 'lucide-react';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/lib/i18n';
