@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { MessageSquare, ArrowRight, Search } from 'lucide-react';
+import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useI18n } from '@/lib/i18n';
