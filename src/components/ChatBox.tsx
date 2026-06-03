@@ -23,6 +23,18 @@ const playNotificationSound = () => {
   } catch {}
 };
 
+function TypingDots() {
+  return (
+    <div className="flex justify-start">
+      <div className="flex items-center gap-1 rounded-2xl rounded-es-sm bg-muted px-3 py-2">
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:-0.3s]" />
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:-0.15s]" />
+        <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted-foreground/60" />
+      </div>
+    </div>
+  );
+}
+
 interface Message {
   id: string;
   sender_id: string;
