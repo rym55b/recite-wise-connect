@@ -50,7 +50,18 @@ export function ChatBox({ sessionId, receiverId, receiverName, mode = 'floating'
   const [newMsg, setNewMsg] = useState('');
   const [open, setOpen] = useState(mode === 'inline');
   const [unread, setUnread] = useState(0);
+  const [peerTyping, setPeerTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const typingChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const lastTypingSentRef = useRef<number>(0);
+  const peerTypingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Stable channel name for typing events
+  const typingTopic = sessionId
+    ? `typing-session-${sessionId}`
+    : receiverId && profile
+      ? `typing-dm-${[profile.id, receiverId].sort().join('-')}`
+      : null;
 
   const scrollToBottom = useCallback(() => {
     setTimeout(() => {
@@ -120,6 +131,70 @@ export function ChatBox({ sessionId, receiverId, receiverName, mode = 'floating'
     };
   }, [profile, sessionId, receiverId, open, scrollToBottom]);
 
+  // Typing indicator: broadcast channel
+  useEffect(() => {
+    if (!profile || !typingTopic) return;
+
+    const channel = supabase.channel(typingTopic, {
+      config: { broadcast: { self: false } },
+    });
+
+    channel
+      .on('broadcast', { event: 'typing' }, (payload) => {
+        const fromId = (payload.payload as any)?.userId;
+        if (!fromId || fromId === profile.id) return;
+        // For DMs, only show if from the active partner
+        if (!sessionId && receiverId && fromId !== receiverId) return;
+        setPeerTyping(true);
+        if (peerTypingTimeoutRef.current) clearTimeout(peerTypingTimeoutRef.current);
+        peerTypingTimeoutRef.current = setTimeout(() => setPeerTyping(false), 2500);
+      })
+      .on('broadcast', { event: 'stop_typing' }, (payload) => {
+        const fromId = (payload.payload as any)?.userId;
+        if (!fromId || fromId === profile.id) return;
+        if (!sessionId && receiverId && fromId !== receiverId) return;
+        setPeerTyping(false);
+        if (peerTypingTimeoutRef.current) clearTimeout(peerTypingTimeoutRef.current);
+      })
+      .subscribe();
+
+    typingChannelRef.current = channel;
+
+    return () => {
+      if (peerTypingTimeoutRef.current) clearTimeout(peerTypingTimeoutRef.current);
+      supabase.removeChannel(channel);
+      typingChannelRef.current = null;
+    };
+  }, [profile, typingTopic, sessionId, receiverId]);
+
+  const broadcastTyping = useCallback(() => {
+    if (!profile || !typingChannelRef.current) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 1500) return;
+    lastTypingSentRef.current = now;
+    typingChannelRef.current.send({
+      type: 'broadcast',
+      event: 'typing',
+      payload: { userId: profile.id },
+    });
+  }, [profile]);
+
+  const broadcastStopTyping = useCallback(() => {
+    if (!profile || !typingChannelRef.current) return;
+    lastTypingSentRef.current = 0;
+    typingChannelRef.current.send({
+      type: 'broadcast',
+      event: 'stop_typing',
+      payload: { userId: profile.id },
+    });
+  }, [profile]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewMsg(e.target.value);
+    if (e.target.value.trim().length > 0) broadcastTyping();
+    else broadcastStopTyping();
+  };
+
   const sendMessage = async () => {
     if (!newMsg.trim() || !profile) return;
 
@@ -135,6 +210,7 @@ export function ChatBox({ sessionId, receiverId, receiverName, mode = 'floating'
     }
 
     setNewMsg('');
+    broadcastStopTyping();
     await supabase.from('messages').insert(msgData);
   };
 
