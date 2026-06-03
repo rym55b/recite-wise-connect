@@ -295,6 +295,7 @@ export function ChatBox({ sessionId, receiverId, receiverName, mode = 'floating'
                     </div>
                   );
                 })}
+                {peerTyping && <TypingDots />}
               </div>
 
               {/* Input */}
@@ -302,7 +303,7 @@ export function ChatBox({ sessionId, receiverId, receiverName, mode = 'floating'
                 <div className="flex gap-2">
                   <Input
                     value={newMsg}
-                    onChange={e => setNewMsg(e.target.value)}
+                    onChange={handleInputChange}
                     onKeyDown={handleKeyDown}
                     placeholder="اكتب رسالة..."
                     className="flex-1 rounded-full text-sm"
@@ -354,13 +355,14 @@ export function ChatBox({ sessionId, receiverId, receiverName, mode = 'floating'
             </div>
           );
         })}
+        {peerTyping && <TypingDots />}
       </div>
 
       <div className="border-t border-border/50 p-3">
         <div className="flex gap-2">
           <Input
             value={newMsg}
-            onChange={e => setNewMsg(e.target.value)}
+            onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="اكتب رسالة..."
             className="flex-1 rounded-full text-sm"
