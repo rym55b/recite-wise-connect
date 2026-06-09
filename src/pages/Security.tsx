@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Navbar } from '@/components/Navbar';
 import { IslamicPattern } from '@/components/IslamicPattern';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useI18n } from '@/lib/i18n';
-import { ShieldCheck, ShieldAlert, ShieldX, ExternalLink, Search } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, ShieldX, ExternalLink, Search, Lock } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 type Severity = 'critical' | 'high' | 'warn' | 'info';
 type Status = 'fixed' | 'ignored' | 'open';
@@ -131,8 +134,27 @@ function migrationHref(file: string) {
 
 export default function Security() {
   const { dir } = useI18n();
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | Status>('all');
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      setAuthorized(false);
+      return;
+    }
+    (async () => {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .in('role', ['admin', 'moderator']);
+      setAuthorized((data?.length ?? 0) > 0);
+    })();
+  }, [user, authLoading]);
 
   const filtered = useMemo(() => {
     return FINDINGS.filter(f => {
@@ -155,6 +177,42 @@ export default function Security() {
       open: FINDINGS.filter(f => f.status === 'open').length,
     };
   }, []);
+
+  if (authLoading || authorized === null) {
+    return (
+      <div dir={dir} className="min-h-screen bg-background flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
+  if (!authorized) {
+    return (
+      <div dir={dir} className="min-h-screen bg-background">
+        <Navbar />
+        <section className="relative flex min-h-[calc(100vh-4rem)] items-center justify-center px-4">
+          <IslamicPattern className="text-foreground" opacity={0.03} />
+          <Card className="relative z-10 w-full max-w-md border-border/60 text-center">
+            <CardHeader>
+              <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                <Lock className="h-7 w-7 text-muted-foreground" />
+              </div>
+              <CardTitle>Accès réservé</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Cette page est réservée aux administrateurs et mainteneurs du projet.
+                Si vous pensez qu'il s'agit d'une erreur, contactez un administrateur.
+              </p>
+              <Button onClick={() => navigate(user ? '/dashboard' : '/auth')} className="w-full">
+                {user ? 'Retour au tableau de bord' : 'Se connecter'}
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    );
+  }
 
   return (
     <div dir={dir} className="min-h-screen bg-background">
