@@ -253,6 +253,9 @@ export default function Dashboard() {
           <Button variant="outline" onClick={() => navigate('/invitations')} className="gap-2 shrink-0 text-sm h-9 md:h-10">
             <MailOpen className="h-4 w-4" /> {t('invitations')}
           </Button>
+          <Button variant="outline" onClick={() => navigate('/messages')} className="gap-2 shrink-0 text-sm h-9 md:h-10">
+            <MessageSquare className="h-4 w-4" /> {t('messages') || 'الرسائل'}
+          </Button>
         </div>
 
         <div className="grid gap-6 md:grid-cols-2">
