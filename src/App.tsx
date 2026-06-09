@@ -18,6 +18,7 @@ import Stats from "./pages/Stats";
 import Invitations from "./pages/Invitations";
 import Messages from "./pages/Messages";
 import UserProfile from "./pages/UserProfile";
+import Security from "./pages/Security";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -44,6 +45,7 @@ const App = () => (
                 <Route path="/invitations" element={<Invitations />} />
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/user/:id" element={<UserProfile />} />
+                <Route path="/security" element={<Security />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
