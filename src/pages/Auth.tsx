@@ -17,7 +17,7 @@ export default function Auth() {
   const { t, dir } = useI18n();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [isLogin, setIsLogin] = useState(true);
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -32,7 +32,17 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (isLogin) {
+      if (mode === 'forgot') {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        if (error) throw error;
+        toast({
+          title: 'تم الإرسال',
+          description: 'تحقق من بريدك الإلكتروني لإعادة تعيين كلمة المرور.',
+        });
+        setMode('login');
+      } else if (mode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         navigate('/dashboard');
@@ -42,7 +52,7 @@ export default function Auth() {
           password,
           options: {
             data: { display_name: displayName, gender, level },
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: `${window.location.origin}/dashboard`,
           },
         });
         if (error) throw error;
@@ -77,10 +87,12 @@ export default function Auth() {
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl gradient-emerald">
               <span className="text-2xl font-bold text-primary-foreground font-serif">ت</span>
             </div>
-            <CardTitle className="text-2xl">{isLogin ? t('login') : t('signup')}</CardTitle>
+            <CardTitle className="text-2xl">
+              {mode === 'login' ? t('login') : mode === 'signup' ? t('signup') : 'استرجاع كلمة المرور'}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button
+            {mode !== 'forgot' && <Button
               variant="outline"
               className="w-full gap-2"
               onClick={handleGoogleAuth}
@@ -93,19 +105,19 @@ export default function Auth() {
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
               </svg>
               {t('signInWithGoogle')}
-            </Button>
+            </Button>}
 
-            <div className="relative">
+            {mode !== 'forgot' && <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-card px-2 text-muted-foreground">{t('orContinueWith')}</span>
               </div>
-            </div>
+            </div>}
 
             <form onSubmit={handleEmailAuth} className="space-y-4">
-              {!isLogin && (
+              {mode === 'signup' && (
                 <>
                   <div className="space-y-2">
                     <Label>{t('name')}</Label>
@@ -151,7 +163,7 @@ export default function Auth() {
                 </div>
               </div>
 
-              <div className="space-y-2">
+              {mode !== 'forgot' && <div className="space-y-2">
                 <Label>{t('password')}</Label>
                 <div className="relative">
                   <Input
@@ -169,19 +181,39 @@ export default function Auth() {
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-              </div>
+              </div>}
+
+              {mode === 'login' && (
+                <div className="text-end">
+                  <button
+                    type="button"
+                    onClick={() => setMode('forgot')}
+                    className="text-xs text-primary hover:underline"
+                  >
+                    نسيت كلمة المرور؟
+                  </button>
+                </div>
+              )}
 
               <Button type="submit" className="w-full gradient-emerald border-0 text-primary-foreground" disabled={loading}>
-                {loading ? '...' : isLogin ? t('login') : t('signup')}
+                {loading ? '...' : mode === 'login' ? t('login') : mode === 'signup' ? t('signup') : 'إرسال رابط الاسترجاع'}
               </Button>
             </form>
 
-            <p className="text-center text-sm text-muted-foreground">
-              {isLogin ? t('dontHaveAccount') : t('alreadyHaveAccount')}{' '}
-              <button onClick={() => setIsLogin(!isLogin)} className="text-primary font-medium hover:underline">
-                {isLogin ? t('signup') : t('login')}
-              </button>
-            </p>
+            {mode === 'forgot' ? (
+              <p className="text-center text-sm text-muted-foreground">
+                <button onClick={() => setMode('login')} className="text-primary font-medium hover:underline">
+                  العودة لتسجيل الدخول
+                </button>
+              </p>
+            ) : (
+              <p className="text-center text-sm text-muted-foreground">
+                {mode === 'login' ? t('dontHaveAccount') : t('alreadyHaveAccount')}{' '}
+                <button onClick={() => setMode(mode === 'login' ? 'signup' : 'login')} className="text-primary font-medium hover:underline">
+                  {mode === 'login' ? t('signup') : t('login')}
+                </button>
+              </p>
+            )}
           </CardContent>
         </Card>
       </section>
