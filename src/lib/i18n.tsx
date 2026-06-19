@@ -103,6 +103,7 @@ const translations = {
     noConversations: 'لا توجد محادثات بعد',
     searchUser: 'ابحث عن مستخدم...',
     selectConversation: 'اختر محادثة للبدء',
+    progressTracker: 'لوحة التقدم',
   },
   en: {
     appName: 'Tilawati',
@@ -204,6 +205,7 @@ const translations = {
     noConversations: 'No conversations yet',
     searchUser: 'Search for a user...',
     selectConversation: 'Select a conversation to start',
+    progressTracker: 'Progress',
   },
 } as const;
 

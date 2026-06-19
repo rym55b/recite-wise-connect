@@ -288,6 +288,7 @@ export type Database = {
           created_at: string
           creator_id: string | null
           ended_at: string | null
+          from_verse: number | null
           id: string
           is_group: boolean
           is_public: boolean
@@ -295,7 +296,9 @@ export type Database = {
           session_type: Database["public"]["Enums"]["session_type"]
           started_at: string | null
           status: Database["public"]["Enums"]["session_status"]
+          surah_name: string | null
           title: string | null
+          to_verse: number | null
           user1_id: string
           user2_id: string
         }
@@ -304,6 +307,7 @@ export type Database = {
           created_at?: string
           creator_id?: string | null
           ended_at?: string | null
+          from_verse?: number | null
           id?: string
           is_group?: boolean
           is_public?: boolean
@@ -311,7 +315,9 @@ export type Database = {
           session_type: Database["public"]["Enums"]["session_type"]
           started_at?: string | null
           status?: Database["public"]["Enums"]["session_status"]
+          surah_name?: string | null
           title?: string | null
+          to_verse?: number | null
           user1_id: string
           user2_id: string
         }
@@ -320,6 +326,7 @@ export type Database = {
           created_at?: string
           creator_id?: string | null
           ended_at?: string | null
+          from_verse?: number | null
           id?: string
           is_group?: boolean
           is_public?: boolean
@@ -327,7 +334,9 @@ export type Database = {
           session_type?: Database["public"]["Enums"]["session_type"]
           started_at?: string | null
           status?: Database["public"]["Enums"]["session_status"]
+          surah_name?: string | null
           title?: string | null
+          to_verse?: number | null
           user1_id?: string
           user2_id?: string
         }

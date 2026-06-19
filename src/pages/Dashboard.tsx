@@ -250,6 +250,9 @@ export default function Dashboard() {
           <Button variant="outline" onClick={() => navigate('/stats')} className="gap-2 shrink-0 text-sm h-9 md:h-10">
             📊 {t('statistics')}
           </Button>
+          <Button variant="outline" onClick={() => navigate('/progress')} className="gap-2 shrink-0 text-sm h-9 md:h-10">
+            📈 {t('progressTracker')}
+          </Button>
           <Button variant="outline" onClick={() => navigate('/invitations')} className="gap-2 shrink-0 text-sm h-9 md:h-10">
             <MailOpen className="h-4 w-4" /> {t('invitations')}
           </Button>

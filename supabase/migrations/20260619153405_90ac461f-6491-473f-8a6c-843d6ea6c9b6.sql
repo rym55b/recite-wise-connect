@@ -1,0 +1,1 @@
+ALTER TABLE public.sessions ADD COLUMN IF NOT EXISTS surah_name text, ADD COLUMN IF NOT EXISTS from_verse integer, ADD COLUMN IF NOT EXISTS to_verse integer;
