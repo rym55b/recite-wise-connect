@@ -15,7 +15,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress as ProgressBar } from '@/components/ui/progress';
 
 export default function Progress() {
-  const { t, dir, lang } = useI18n() as any;
+  const { t, dir, language } = useI18n() as any;
+  const lang = language;
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<any[]>([]);
