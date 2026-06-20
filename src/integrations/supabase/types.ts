@@ -390,6 +390,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_my_gender: {
+        Args: never
+        Returns: Database["public"]["Enums"]["gender_type"]
+      }
       get_my_profile_id: { Args: never; Returns: string }
       has_role: {
         Args: {
