@@ -14,7 +14,7 @@ export default function Matchmaking() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const role = searchParams.get('role') || 'reader';
-  const sessionType = 'recitation'; // default session type
+  const sessionType = searchParams.get('type') || 'recitation';
   const [_searching, setSearching] = useState(false);
   const [dots, setDots] = useState('');
 
@@ -56,6 +56,7 @@ export default function Matchmaking() {
         .select('id')
         .or(`user1_id.eq.${profile.id},user2_id.eq.${profile.id}`)
         .eq('status', 'active')
+        .eq('session_type', sessionType as any)
         .limit(1)
         .maybeSingle();
       if (data) {
@@ -70,7 +71,7 @@ export default function Matchmaking() {
         supabase.from('matchmaking_queue').delete().eq('user_id', profile.id);
       }
     };
-  }, [profile, joinQueue, navigate]);
+  }, [profile, joinQueue, navigate, sessionType]);
 
   const leaveQueue = async () => {
     if (profile) {

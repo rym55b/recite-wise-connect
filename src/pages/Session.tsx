@@ -10,6 +10,8 @@ import { Navbar } from '@/components/Navbar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ChatBox } from '@/components/ChatBox';
 import { useToast } from '@/hooks/use-toast';
 
@@ -26,6 +28,9 @@ export default function Session() {
   const [showRating, setShowRating] = useState(false);
   const [stars, setStars] = useState(5);
   const [comment, setComment] = useState('');
+  const [surahName, setSurahName] = useState('');
+  const [fromVerse, setFromVerse] = useState('');
+  const [toVerse, setToVerse] = useState('');
 
   // Handle remote peer ending the session
   const handleRemoteEnd = useCallback(() => {
@@ -64,6 +69,9 @@ export default function Session() {
       if (data) {
         setSession(data);
         setPartner(data.user1_id === profile.id ? data.user2 : data.user1);
+        setSurahName(data.surah_name || '');
+        setFromVerse(data.from_verse ? String(data.from_verse) : '');
+        setToVerse(data.to_verse ? String(data.to_verse) : '');
       }
     };
     fetchSession();
@@ -74,7 +82,13 @@ export default function Session() {
     sendEndSignal(); // notify the other peer instantly
     await supabase
       .from('sessions')
-      .update({ status: 'completed', ended_at: new Date().toISOString() })
+      .update({
+        status: 'completed',
+        ended_at: new Date().toISOString(),
+        surah_name: surahName || null,
+        from_verse: fromVerse ? parseInt(fromVerse, 10) : null,
+        to_verse: toVerse ? parseInt(toVerse, 10) : null,
+      })
       .eq('id', id);
     cleanupWebRTC();
     setShowRating(true);
@@ -177,6 +191,37 @@ export default function Session() {
         <div className="rounded-full bg-primary/10 px-3 md:px-4 py-1 text-xs md:text-sm text-primary font-medium">
           {session.session_type === 'recitation' ? t('recitation') : session.session_type === 'memorization' ? t('memorization') : t('tests')}
         </div>
+
+        {/* Surah & verses tracker */}
+        <Card className="w-full max-w-md border-border/50">
+          <CardContent className="p-3 space-y-2">
+            <Label className="text-xs text-muted-foreground">السورة والآيات</Label>
+            <Input
+              placeholder="اسم السورة"
+              value={surahName}
+              onChange={(e) => setSurahName(e.target.value)}
+              className="h-9"
+            />
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                min={1}
+                placeholder="من آية"
+                value={fromVerse}
+                onChange={(e) => setFromVerse(e.target.value)}
+                className="h-9"
+              />
+              <Input
+                type="number"
+                min={1}
+                placeholder="إلى آية"
+                value={toVerse}
+                onChange={(e) => setToVerse(e.target.value)}
+                className="h-9"
+              />
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Controls */}
         <div className="flex gap-4">

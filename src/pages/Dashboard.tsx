@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Dashboard() {
   const { t, dir } = useI18n();
@@ -23,6 +24,7 @@ export default function Dashboard() {
   const [topStudents, setTopStudents] = useState<any[]>([]);
   const [openSessions, setOpenSessions] = useState<any[]>([]);
   const [joinCode, setJoinCode] = useState('');
+  const [individualType, setIndividualType] = useState<'recitation' | 'memorization' | 'test'>('recitation');
 
   useEffect(() => {
     if (!loading && !user) navigate('/auth');
@@ -63,14 +65,62 @@ export default function Dashboard() {
     const channel = supabase
       .channel('dashboard-invitations')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'invitations' }, () => fetchData())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions' }, (payload: any) => {
+        fetchData();
+        // Auto-navigate when a paired (non-group) session is created involving me
+        const s = payload?.new;
+        if (
+          payload?.eventType === 'INSERT' &&
+          s && !s.is_group && s.status === 'active' &&
+          (s.user1_id === profile.id || s.user2_id === profile.id)
+        ) {
+          navigate(`/session/${s.id}`);
+        }
+      })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, [profile]);
+  }, [profile, navigate]);
 
   const handleAcceptInvite = async (id: string) => {
-    await supabase.from('invitations').update({ status: 'accepted' }).eq('id', id);
+    if (!profile) return;
+    // Look up the invitation
+    const { data: inv, error: invErr } = await supabase
+      .from('invitations')
+      .select('*')
+      .eq('id', id)
+      .single();
+    if (invErr || !inv) {
+      toast({ title: 'خطأ', description: 'تعذر العثور على الدعوة', variant: 'destructive' });
+      return;
+    }
+    // Mark accepted (required by sessions RLS policy)
+    const { error: updErr } = await supabase
+      .from('invitations')
+      .update({ status: 'accepted' })
+      .eq('id', id);
+    if (updErr) {
+      toast({ title: 'خطأ', description: updErr.message, variant: 'destructive' });
+      return;
+    }
+    // Create the paired session (sender = reader/user1, receiver = corrector/user2)
+    const { data: session, error: sErr } = await supabase
+      .from('sessions')
+      .insert({
+        session_type: inv.session_type,
+        user1_id: inv.sender_id,
+        user2_id: inv.receiver_id,
+        creator_id: profile.id,
+        status: 'active',
+        started_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
+    if (sErr || !session) {
+      toast({ title: 'خطأ', description: sErr?.message || 'تعذر إنشاء الجلسة', variant: 'destructive' });
+      return;
+    }
+    navigate(`/session/${session.id}`);
   };
 
   const handleRejectInvite = async (id: string) => {
@@ -175,7 +225,7 @@ export default function Dashboard() {
                   <button
                     key={i}
                     className="flex items-center gap-3 rounded-lg border border-border/50 p-4 text-start transition-all hover:shadow-md hover:border-primary/30 hover:bg-primary/5"
-                    onClick={() => navigate(`/matchmaking?role=${s.role}`)}
+                    onClick={() => navigate(`/matchmaking?role=${s.role}&type=${individualType}`)}
                   >
                     <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${s.color} text-white shadow-md`}>
                       <s.icon className="h-6 w-6" />
@@ -183,6 +233,16 @@ export default function Dashboard() {
                     <p className="font-bold text-foreground text-lg">{s.title}</p>
                   </button>
                 ))}
+                <Select value={individualType} onValueChange={(v) => setIndividualType(v as any)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="recitation">{t('recitation')}</SelectItem>
+                    <SelectItem value="memorization">{t('memorization')}</SelectItem>
+                    <SelectItem value="test">{t('tests')}</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
