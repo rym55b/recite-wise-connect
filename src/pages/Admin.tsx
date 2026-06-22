@@ -92,6 +92,7 @@ export default function Admin() {
       .order('created_at', { ascending: false })
       .limit(100);
     if (statusFilter !== 'all') q = q.eq('status', statusFilter);
+    if (reasonFilter !== 'all') q = q.eq('reason', reasonFilter);
     const { data, error } = await q;
     if (error) {
       toast({ title: 'فشل تحميل البلاغات', description: error.message, variant: 'destructive' });
