@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldAlert, ShieldCheck, Trash2, UserX, UserCheck, Search } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, Trash2, UserX, UserCheck, Search, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoles, type AppRole } from '@/hooks/useRoles';
@@ -19,6 +19,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { REPORT_CATEGORIES } from '@/components/ReportDialog';
 
 interface ReportRow {
   id: string;
