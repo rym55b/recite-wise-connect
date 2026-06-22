@@ -231,9 +231,9 @@ export default function Admin() {
           </TabsList>
 
           <TabsContent value="reports" className="space-y-4">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending">قيد الانتظار</SelectItem>
                   <SelectItem value="reviewing">قيد المراجعة</SelectItem>
@@ -242,7 +242,30 @@ export default function Admin() {
                   <SelectItem value="all">الكل</SelectItem>
                 </SelectContent>
               </Select>
+              <Select value={reasonFilter} onValueChange={setReasonFilter}>
+                <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">كل الأسباب</SelectItem>
+                  {REPORT_CATEGORIES.map(c => (
+                    <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {!loading && reports.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {(() => {
+                  const counts = new Map<string, number>();
+                  reports.forEach(r => counts.set(r.reason, (counts.get(r.reason) || 0) + 1));
+                  return Array.from(counts.entries()).map(([reason, count]) => (
+                    <Badge key={reason} className={REASON_COLORS[reason] || 'bg-muted text-muted-foreground'}>
+                      {reason} ({count})
+                    </Badge>
+                  ));
+                })()}
+              </div>
+            )}
 
             {loading ? (
               <p className="text-muted-foreground text-sm">جارٍ التحميل...</p>
