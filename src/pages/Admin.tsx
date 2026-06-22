@@ -124,7 +124,7 @@ export default function Admin() {
     setLoading(true);
     Promise.all([loadReports(), loadUsers()]).finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isModerator, statusFilter]);
+  }, [isModerator, statusFilter, reasonFilter]);
 
   const updateReportStatus = async (id: string, status: string) => {
     const { error } = await supabase
