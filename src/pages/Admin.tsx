@@ -48,6 +48,18 @@ const STATUS_COLORS: Record<string, string> = {
   dismissed: 'bg-muted text-muted-foreground',
 };
 
+const REASON_COLORS: Record<string, string> = {
+  'إساءة استخدام': 'bg-red-500/15 text-red-600',
+  'محتوى مخالف': 'bg-orange-500/15 text-orange-600',
+  'سلوك غير لائق': 'bg-rose-500/15 text-rose-600',
+  'انتحال شخصية': 'bg-purple-500/15 text-purple-600',
+  'مخالفة الأخلاق الإسلامية': 'bg-amber-500/15 text-amber-600',
+  'سبام أو إعلانات': 'bg-cyan-500/15 text-cyan-600',
+  'أخرى': 'bg-gray-500/15 text-gray-600',
+  'محتوى غير لائق': 'bg-orange-500/15 text-orange-600',
+  'سلوك مسيء': 'bg-rose-500/15 text-rose-600',
+};
+
 export default function Admin() {
   const { profile, loading: authLoading } = useAuth();
   const { isAdmin, isModerator, loading: rolesLoading } = useRoles();
