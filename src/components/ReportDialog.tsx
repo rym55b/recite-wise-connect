@@ -35,20 +35,23 @@ interface Props {
   trigger?: React.ReactNode;
 }
 
-const REASONS = [
-  'محتوى غير لائق',
-  'سلوك مسيء',
-  'انتحال شخصية',
-  'مخالفة الأخلاق الإسلامية',
-  'سبام أو إعلانات',
-  'أخرى',
-];
+export const REPORT_CATEGORIES = [
+  { id: 'abuse', label: 'إساءة استخدام' },
+  { id: 'inappropriate_content', label: 'محتوى مخالف' },
+  { id: 'misconduct', label: 'سلوك غير لائق' },
+  { id: 'impersonation', label: 'انتحال شخصية' },
+  { id: 'islamic_ethics', label: 'مخالفة الأخلاق الإسلامية' },
+  { id: 'spam', label: 'سبام أو إعلانات' },
+  { id: 'other', label: 'أخرى' },
+] as const;
+
+export type ReportCategory = (typeof REPORT_CATEGORIES)[number]['id'];
 
 export function ReportDialog({ reportedUserId, reportedSessionId, trigger }: Props) {
   const { profile } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState(REASONS[0]);
+  const [reason, setReason] = useState<string>(REPORT_CATEGORIES[0].label);
   const [details, setDetails] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -99,7 +102,7 @@ export function ReportDialog({ reportedUserId, reportedSessionId, trigger }: Pro
             <Select value={reason} onValueChange={setReason}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {REASONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                {REPORT_CATEGORIES.map(c => <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

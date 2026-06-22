@@ -19,6 +19,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { REPORT_CATEGORIES } from '@/components/ReportDialog';
 
 interface ReportRow {
   id: string;
@@ -47,6 +48,18 @@ const STATUS_COLORS: Record<string, string> = {
   dismissed: 'bg-muted text-muted-foreground',
 };
 
+const REASON_COLORS: Record<string, string> = {
+  'إساءة استخدام': 'bg-red-500/15 text-red-600',
+  'محتوى مخالف': 'bg-orange-500/15 text-orange-600',
+  'سلوك غير لائق': 'bg-rose-500/15 text-rose-600',
+  'انتحال شخصية': 'bg-purple-500/15 text-purple-600',
+  'مخالفة الأخلاق الإسلامية': 'bg-amber-500/15 text-amber-600',
+  'سبام أو إعلانات': 'bg-cyan-500/15 text-cyan-600',
+  'أخرى': 'bg-gray-500/15 text-gray-600',
+  'محتوى غير لائق': 'bg-orange-500/15 text-orange-600',
+  'سلوك مسيء': 'bg-rose-500/15 text-rose-600',
+};
+
 export default function Admin() {
   const { profile, loading: authLoading } = useAuth();
   const { isAdmin, isModerator, loading: rolesLoading } = useRoles();
@@ -57,6 +70,7 @@ export default function Admin() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('pending');
+  const [reasonFilter, setReasonFilter] = useState<string>('all');
   const [resolutionDraft, setResolutionDraft] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
@@ -78,6 +92,7 @@ export default function Admin() {
       .order('created_at', { ascending: false })
       .limit(100);
     if (statusFilter !== 'all') q = q.eq('status', statusFilter);
+    if (reasonFilter !== 'all') q = q.eq('reason', reasonFilter);
     const { data, error } = await q;
     if (error) {
       toast({ title: 'فشل تحميل البلاغات', description: error.message, variant: 'destructive' });
@@ -109,7 +124,7 @@ export default function Admin() {
     setLoading(true);
     Promise.all([loadReports(), loadUsers()]).finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isModerator, statusFilter]);
+  }, [isModerator, statusFilter, reasonFilter]);
 
   const updateReportStatus = async (id: string, status: string) => {
     const { error } = await supabase
@@ -216,9 +231,9 @@ export default function Admin() {
           </TabsList>
 
           <TabsContent value="reports" className="space-y-4">
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="pending">قيد الانتظار</SelectItem>
                   <SelectItem value="reviewing">قيد المراجعة</SelectItem>
@@ -227,7 +242,30 @@ export default function Admin() {
                   <SelectItem value="all">الكل</SelectItem>
                 </SelectContent>
               </Select>
+              <Select value={reasonFilter} onValueChange={setReasonFilter}>
+                <SelectTrigger className="w-52"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">كل الأسباب</SelectItem>
+                  {REPORT_CATEGORIES.map(c => (
+                    <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+
+            {!loading && reports.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {(() => {
+                  const counts = new Map<string, number>();
+                  reports.forEach(r => counts.set(r.reason, (counts.get(r.reason) || 0) + 1));
+                  return Array.from(counts.entries()).map(([reason, count]) => (
+                    <Badge key={reason} className={REASON_COLORS[reason] || 'bg-muted text-muted-foreground'}>
+                      {reason} ({count})
+                    </Badge>
+                  ));
+                })()}
+              </div>
+            )}
 
             {loading ? (
               <p className="text-muted-foreground text-sm">جارٍ التحميل...</p>
@@ -241,9 +279,12 @@ export default function Admin() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <ShieldAlert className="h-4 w-4 text-amber-600" />
-                      <CardTitle className="text-base">{r.reason}</CardTitle>
+                      <span className="text-base font-semibold leading-none tracking-tight">بلاغ</span>
                     </div>
-                    <Badge className={STATUS_COLORS[r.status] || ''}>{r.status}</Badge>
+                    <div className="flex gap-2">
+                      <Badge className={REASON_COLORS[r.reason] || 'bg-muted text-muted-foreground'}>{r.reason}</Badge>
+                      <Badge className={STATUS_COLORS[r.status] || ''}>{r.status}</Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
