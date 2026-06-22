@@ -70,6 +70,7 @@ export default function Admin() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('pending');
+  const [reasonFilter, setReasonFilter] = useState<string>('all');
   const [resolutionDraft, setResolutionDraft] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
