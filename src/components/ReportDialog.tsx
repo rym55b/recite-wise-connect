@@ -51,7 +51,7 @@ export function ReportDialog({ reportedUserId, reportedSessionId, trigger }: Pro
   const { profile } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState(REPORT_CATEGORIES[0].label);
+  const [reason, setReason] = useState<string>(REPORT_CATEGORIES[0].label);
   const [details, setDetails] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
@@ -102,7 +102,7 @@ export function ReportDialog({ reportedUserId, reportedSessionId, trigger }: Pro
             <Select value={reason} onValueChange={setReason}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {REASONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                {REPORT_CATEGORIES.map(c => <SelectItem key={c.id} value={c.label}>{c.label}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
