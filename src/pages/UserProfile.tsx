@@ -10,6 +10,7 @@ import { IslamicPattern } from '@/components/IslamicPattern';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { ReportDialog } from '@/components/ReportDialog';
 
 interface UserProfileData {
   id: string;
@@ -153,7 +154,7 @@ export default function UserProfile() {
 
         {/* Action Buttons */}
         {profile && !isOwnProfile && (
-          <div className="mb-6">
+          <div className="mb-6 space-y-2">
             <Button
               className="w-full gradient-emerald border-0 text-primary-foreground gap-2"
               onClick={() => navigate(`/messages?chat=${userData.id}`)}
@@ -161,6 +162,14 @@ export default function UserProfile() {
               <MessageSquare className="h-5 w-5" />
               مراسلة {userData.display_name}
             </Button>
+            <ReportDialog
+              reportedUserId={userData.id}
+              trigger={
+                <Button variant="outline" className="w-full gap-2">
+                  إبلاغ عن المستخدم
+                </Button>
+              }
+            />
           </div>
         )}
 

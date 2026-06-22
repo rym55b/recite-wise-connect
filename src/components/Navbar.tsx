@@ -1,14 +1,16 @@
-import { Moon, Sun, Globe, LogOut } from 'lucide-react';
+import { Moon, Sun, Globe, LogOut, ShieldCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 import { useTheme } from '@/lib/theme';
 import { useAuth } from '@/hooks/useAuth';
+import { useRoles } from '@/hooks/useRoles';
 import { Button } from '@/components/ui/button';
 
 export function Navbar() {
   const { language, setLanguage, t } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const { user, signOut } = useAuth();
+  const { isModerator } = useRoles();
   const navigate = useNavigate();
 
   return (
@@ -28,6 +30,12 @@ export function Navbar() {
           <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full h-8 w-8 md:h-10 md:w-10" title={theme === 'dark' ? t('lightMode') : t('darkMode')}>
             {theme === 'dark' ? <Sun className="h-4 w-4 md:h-5 md:w-5" /> : <Moon className="h-4 w-4 md:h-5 md:w-5" />}
           </Button>
+
+          {user && isModerator && (
+            <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 md:h-10 md:w-10" title="لوحة الإشراف" onClick={() => navigate('/admin')}>
+              <ShieldCheck className="h-4 w-4 md:h-5 md:w-5" />
+            </Button>
+          )}
 
           {user ? (
             <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 md:h-10 md:w-10 hidden md:inline-flex" onClick={signOut}>
