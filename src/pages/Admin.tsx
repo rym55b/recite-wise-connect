@@ -279,9 +279,12 @@ export default function Admin() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-2">
                       <ShieldAlert className="h-4 w-4 text-amber-600" />
-                      <CardTitle className="text-base">{r.reason}</CardTitle>
+                      <span className="text-base font-semibold leading-none tracking-tight">بلاغ</span>
                     </div>
-                    <Badge className={STATUS_COLORS[r.status] || ''}>{r.status}</Badge>
+                    <div className="flex gap-2">
+                      <Badge className={REASON_COLORS[r.reason] || 'bg-muted text-muted-foreground'}>{r.reason}</Badge>
+                      <Badge className={STATUS_COLORS[r.status] || ''}>{r.status}</Badge>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
