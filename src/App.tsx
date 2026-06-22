@@ -21,6 +21,7 @@ import Invitations from "./pages/Invitations";
 import Messages from "./pages/Messages";
 import UserProfile from "./pages/UserProfile";
 import Security from "./pages/Security";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -50,6 +51,7 @@ const App = () => (
                 <Route path="/messages" element={<Messages />} />
                 <Route path="/user/:id" element={<UserProfile />} />
                 <Route path="/security" element={<Security />} />
+                <Route path="/admin" element={<Admin />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
