@@ -51,7 +51,7 @@ export function ReportDialog({ reportedUserId, reportedSessionId, trigger }: Pro
   const { profile } = useAuth();
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
-  const [reason, setReason] = useState(REASONS[0]);
+  const [reason, setReason] = useState(REPORT_CATEGORIES[0].label);
   const [details, setDetails] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
