@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldAlert, ShieldCheck, Trash2, UserX, UserCheck, Search } from 'lucide-react';
+import { ShieldAlert, ShieldCheck, Trash2, UserX, UserCheck, Search, Clock, CheckCircle2, XCircle, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useRoles, type AppRole } from '@/hooks/useRoles';
@@ -41,12 +41,16 @@ interface UserRow {
   roles: AppRole[];
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: 'bg-amber-500/15 text-amber-600',
-  reviewing: 'bg-blue-500/15 text-blue-600',
-  resolved: 'bg-emerald-500/15 text-emerald-600',
-  dismissed: 'bg-muted text-muted-foreground',
+type ReportStatus = 'pending' | 'accepted' | 'rejected' | 'resolved';
+
+const STATUS_META: Record<ReportStatus, { label: string; color: string; icon: typeof Clock }> = {
+  pending:  { label: 'قيد الانتظار', color: 'bg-amber-500/15 text-amber-600 border-amber-500/30',   icon: Clock },
+  accepted: { label: 'مقبول',        color: 'bg-blue-500/15 text-blue-600 border-blue-500/30',      icon: CheckCircle2 },
+  rejected: { label: 'مرفوض',        color: 'bg-rose-500/15 text-rose-600 border-rose-500/30',      icon: XCircle },
+  resolved: { label: 'تم الحل',      color: 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30', icon: Sparkles },
 };
+
+const STATUS_ORDER: ReportStatus[] = ['pending', 'accepted', 'rejected', 'resolved'];
 
 const REASON_COLORS: Record<string, string> = {
   'إساءة استخدام': 'bg-red-500/15 text-red-600',
@@ -126,21 +130,33 @@ export default function Admin() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isModerator, statusFilter, reasonFilter]);
 
-  const updateReportStatus = async (id: string, status: string) => {
-    const { error } = await supabase
-      .from('reports')
-      .update({
-        status,
-        resolution_notes: resolutionDraft[id] ?? null,
-        resolved_by: profile?.id,
-        resolved_at: new Date().toISOString(),
-      })
-      .eq('id', id);
+  const updateReportStatus = async (id: string, status: ReportStatus) => {
+    const isTerminal = status === 'rejected' || status === 'resolved';
+    const notes = resolutionDraft[id]?.trim();
+    if (isTerminal && !notes) {
+      toast({
+        title: 'الملاحظات مطلوبة',
+        description: 'الرجاء كتابة سبب أو ملخص الحل قبل إغلاق البلاغ.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    const payload: Record<string, unknown> = { status };
+    if (notes) payload.resolution_notes = notes;
+    if (status === 'pending') {
+      payload.resolved_by = null;
+      payload.resolved_at = null;
+    } else {
+      payload.resolved_by = profile?.id ?? null;
+      payload.resolved_at = isTerminal ? new Date().toISOString() : null;
+    }
+    const { error } = await supabase.from('reports').update(payload).eq('id', id);
     if (error) {
       toast({ title: 'فشل التحديث', description: error.message, variant: 'destructive' });
       return;
     }
-    toast({ title: 'تم التحديث' });
+    toast({ title: 'تم التحديث', description: `الحالة الجديدة: ${STATUS_META[status].label}` });
+    setResolutionDraft(d => { const { [id]: _, ...rest } = d; return rest; });
     loadReports();
   };
 
@@ -235,11 +251,10 @@ export default function Admin() {
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pending">قيد الانتظار</SelectItem>
-                  <SelectItem value="reviewing">قيد المراجعة</SelectItem>
-                  <SelectItem value="resolved">تم الحل</SelectItem>
-                  <SelectItem value="dismissed">مرفوضة</SelectItem>
-                  <SelectItem value="all">الكل</SelectItem>
+                  <SelectItem value="all">كل الحالات</SelectItem>
+                  {STATUS_ORDER.map(s => (
+                    <SelectItem key={s} value={s}>{STATUS_META[s].label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <Select value={reasonFilter} onValueChange={setReasonFilter}>
@@ -283,7 +298,15 @@ export default function Admin() {
                     </div>
                     <div className="flex gap-2">
                       <Badge className={REASON_COLORS[r.reason] || 'bg-muted text-muted-foreground'}>{r.reason}</Badge>
-                      <Badge className={STATUS_COLORS[r.status] || ''}>{r.status}</Badge>
+                      {(() => {
+                        const meta = STATUS_META[r.status as ReportStatus] ?? { label: r.status, color: 'bg-muted text-muted-foreground border-border', icon: Clock };
+                        const Icon = meta.icon;
+                        return (
+                          <Badge variant="outline" className={`${meta.color} gap-1`}>
+                            <Icon className="h-3 w-3" /> {meta.label}
+                          </Badge>
+                        );
+                      })()}
                     </div>
                   </div>
                 </CardHeader>
@@ -322,21 +345,36 @@ export default function Admin() {
                     </div>
                   )}
                   <Textarea
-                    placeholder="ملاحظات الحل (اختياري)"
-                    value={resolutionDraft[r.id] ?? ''}
+                    placeholder="ملاحظات القرار (مطلوبة عند الرفض أو الحل)"
+                    value={resolutionDraft[r.id] ?? r.resolution_notes ?? ''}
                     onChange={e => setResolutionDraft(d => ({ ...d, [r.id]: e.target.value }))}
                     rows={2}
                   />
                   <div className="flex flex-wrap gap-2">
-                    <Button size="sm" variant="secondary" onClick={() => updateReportStatus(r.id, 'reviewing')}>
-                      قيد المراجعة
-                    </Button>
-                    <Button size="sm" onClick={() => updateReportStatus(r.id, 'resolved')}>
-                      تم الحل
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => updateReportStatus(r.id, 'dismissed')}>
-                      رفض
-                    </Button>
+                    {r.status !== 'pending' && (
+                      <Button size="sm" variant="ghost" className="gap-1"
+                              onClick={() => updateReportStatus(r.id, 'pending')}>
+                        <Clock className="h-3.5 w-3.5" /> إعادة للانتظار
+                      </Button>
+                    )}
+                    {r.status === 'pending' && (
+                      <Button size="sm" className="gap-1"
+                              onClick={() => updateReportStatus(r.id, 'accepted')}>
+                        <CheckCircle2 className="h-3.5 w-3.5" /> قبول للمراجعة
+                      </Button>
+                    )}
+                    {(r.status === 'pending' || r.status === 'accepted') && (
+                      <>
+                        <Button size="sm" variant="destructive" className="gap-1"
+                                onClick={() => updateReportStatus(r.id, 'rejected')}>
+                          <XCircle className="h-3.5 w-3.5" /> رفض البلاغ
+                        </Button>
+                        <Button size="sm" variant="secondary" className="gap-1"
+                                onClick={() => updateReportStatus(r.id, 'resolved')}>
+                          <Sparkles className="h-3.5 w-3.5" /> إنهاء وحل
+                        </Button>
+                      </>
+                    )}
                     {isAdmin && (
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
