@@ -22,6 +22,7 @@ import Messages from "./pages/Messages";
 import UserProfile from "./pages/UserProfile";
 import Security from "./pages/Security";
 import Admin from "./pages/Admin";
+import OAuthConsent from "./pages/OAuthConsent";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
                 <Route path="/user/:id" element={<UserProfile />} />
                 <Route path="/security" element={<Security />} />
                 <Route path="/admin" element={<Admin />} />
+                <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
