@@ -471,6 +471,13 @@ export type Database = {
         Returns: Database["public"]["Enums"]["gender_type"]
       }
       get_my_profile_id: { Args: never; Returns: string }
+      get_waiting_counts: {
+        Args: never
+        Returns: {
+          correctors: number
+          readers: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
