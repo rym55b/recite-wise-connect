@@ -1,12 +1,10 @@
-import { Home, MessageSquare, BarChart3, User, Search } from 'lucide-react';
+import { Home, MessageSquare, User } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
 
 const navItems = [
-  { icon: Home, path: '/dashboard', labelKey: 'dashboard' },
-  { icon: Search, path: '/matchmaking?role=reader', labelKey: 'startSession' },
+  { icon: Home, path: '/dashboard', labelKey: 'home' },
   { icon: MessageSquare, path: '/messages', labelKey: 'messages' },
-  { icon: BarChart3, path: '/stats', labelKey: 'statistics' },
   { icon: User, path: '/profile', labelKey: 'profile' },
 ];
 
@@ -19,7 +17,7 @@ export function MobileBottomNav() {
     <nav className="fixed bottom-0 inset-x-0 z-50 border-t border-border/50 bg-background/95 backdrop-blur-md md:hidden safe-area-bottom">
       <div className="flex items-center justify-around h-16">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path.split('?')[0];
+          const isActive = location.pathname === item.path;
           return (
             <button
               key={item.path}
